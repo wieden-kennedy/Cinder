@@ -86,6 +86,7 @@ protected:
 	std::map<std::string, Qualifier>	mQualifiers;
 	std::vector<Routine>				mRoutines;
 	
+	void								merge( const Operation& rhs, OperatorType type );
 	void								mergeQualifiers( const std::map<std::string, Qualifier>& q );
 public:
 	Operation();

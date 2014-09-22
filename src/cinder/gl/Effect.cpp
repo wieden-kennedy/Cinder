@@ -14,6 +14,19 @@ Operation::Operation()
 {
 }
 
+void Operation::merge( const Operation& rhs, OperatorType type )
+{
+	if ( !rhs.mRoutines.empty() ) {
+		mergeQualifiers( rhs.mQualifiers );
+		for ( vector<Operation::Routine>::const_iterator iter = rhs.mRoutines.begin(); iter != rhs.mRoutines.end(); ++iter ) {
+			mRoutines.push_back( *iter );
+			if ( iter == rhs.mRoutines.begin() ) {
+				mRoutines.back().mOperatorType = type;
+			}
+		}
+	}
+}
+	
 Operation Operation::operator+( const Operation& rhs )
 {
 	Operation lhs = *this;
@@ -51,27 +64,27 @@ Operation Operation::operator%( const Operation& rhs )
 
 void Operation::operator+=( const Operation& rhs )
 {
-	mergeQualifiers( rhs.mQualifiers );
+	merge( rhs, OperatorType_Add );
 }
 	
 void Operation::operator*=( const Operation& rhs )
 {
-	mergeQualifiers( rhs.mQualifiers );
+	merge( rhs, OperatorType_Multiply );
 }
 	
 void Operation::operator-=( const Operation& rhs )
 {
-	mergeQualifiers( rhs.mQualifiers );
+	merge( rhs, OperatorType_Subtract );
 }
 	
 void Operation::operator/=( const Operation& rhs )
 {
-	mergeQualifiers( rhs.mQualifiers );
+	merge( rhs, OperatorType_Divide );
 }
 
 void Operation::operator%=( const Operation& rhs )
 {
-	mergeQualifiers( rhs.mQualifiers );
+	merge( rhs, OperatorType_Modulate );
 }
 	
 void Operation::mergeQualifiers( const map<string, Operation::Qualifier>& q )
