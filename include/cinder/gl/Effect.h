@@ -13,7 +13,7 @@ public:
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	// NOTE these enum should maybe be cleaner
+#if defined ( CINDER_GL_ES_2 )
 	enum : size_t
 	{
 		QualifierPrecision_None,
@@ -21,6 +21,7 @@ public:
 		QualifierPrecision_Medium,
 		QualifierPrecision_High
 	} typedef QualifierPrecision;
+#endif
 
 	enum : size_t
 	{
@@ -60,7 +61,9 @@ public:
 		Qualifier();
 
 		size_t							mCount;
+#if defined ( CINDER_GL_ES_2 )
 		QualifierPrecision				mPrecision;
+#endif
 		QualifierStorage				mStorage;
 		QualifierType					mType;
 		std::string						mValue;
@@ -84,6 +87,7 @@ protected:
 		Routine();
 		
 		OperatorType					mOperatorType;
+		std::string						mResult;
 		std::string						mRoutine;
 	};
 	
@@ -95,17 +99,19 @@ protected:
 public:
 	Operation();
 	
-	Operation operator+( const Operation& rhs );
-	Operation operator*( const Operation& rhs );
-	Operation operator-( const Operation& rhs );
-	Operation operator/( const Operation& rhs );
-	Operation operator%( const Operation& rhs );
+	Operation							operator+( const Operation& rhs );
+	Operation 							operator*( const Operation& rhs );
+	Operation 							operator-( const Operation& rhs );
+	Operation 							operator/( const Operation& rhs );
+	Operation 							operator%( const Operation& rhs );
 	
-	void operator+=( const Operation& rhs );
-	void operator*=( const Operation& rhs );
-	void operator-=( const Operation& rhs );
-	void operator/=( const Operation& rhs );
-	void operator%=( const Operation& rhs );
+	void								operator+=( const Operation& rhs );
+	void								operator*=( const Operation& rhs );
+	void								operator-=( const Operation& rhs );
+	void								operator/=( const Operation& rhs );
+	void								operator%=( const Operation& rhs );
+	
+	virtual std::string					toString() const;
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -127,11 +133,13 @@ public:
 		ExcQualifierMergeCountMismatch( const std::string& msg ) throw();
 	};
 	
+#if defined ( CINDER_GL_ES_2 )
 	class ExcQualifierMergePrecisionMismatch : public Exception
 	{
 	public:
 		ExcQualifierMergePrecisionMismatch( const std::string& msg ) throw();
 	};
+#endif
 	
 	class ExcQualifierMergeStorageMismatch : public Exception
 	{
@@ -152,68 +160,35 @@ public:
 	};
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class FragmentOperation : public Operation
+{
+public:
+	FragmentOperation();
+};
+	
+class VertexOperation : public Operation
+{
+public:
+	VertexOperation();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VertexPassThrough : public VertexOperation
+{
+public:
+	VertexPassThrough();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class FragmentTexture : public FragmentOperation
+{
+public:
+	FragmentTexture();
+};
+	
 } } }
  
-
-/*
-Leaving this here for later use
-
-bool
-bvec2
-bvec3
-bvec4
-
-double
-dvec2
-dvec3
-dvec4
-
-int
-ivec2
-ivec3
-ivec4
-
-uvec2
-uvec3
-uvec4
-
-vec2
-vec3
-vec4
-
-dmat2
-dmat2x2
-dmat2x3
-dmat2x4
-dmat3
-dmat3x2
-dmat3x3
-dmat3x4
-dmat4
-dmat4x2
-dmat4x3
-dmat4x4
-
-float
-
-mat2
-mat2x2
-mat2x3
-mat2x4
-mat3
-mat3x2
-mat3x3
-mat3x4
-mat4
-mat4x2
-mat4x3
-mat4x4
-
-uint
-
-sampler1D
-sampler2D
-sampler2DShadow
-sampler3D
-samplerCube
-*/
