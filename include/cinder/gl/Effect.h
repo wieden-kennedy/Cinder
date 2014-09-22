@@ -1,43 +1,56 @@
 #pragma once
 
+#include "cinder/Exception.h"
 #include <map>
 #include <string>
+#include <vector>
 
 namespace cinder { namespace gl { namespace effect {
 
 class Operation
 {
-protected:
+public:
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	enum : size_t
 	{
-		NONE, LOW, MEDIUM, HIGH
+		QualifierPrecision_None,
+		QualifierPrecision_Low,
+		QualifierPrecision_Medium,
+		QualifierPrecision_High
 	} typedef QualifierPrecision;
 
 	enum : size_t
 	{
-		NONE, CONST, ATTRIBUTE, UNIFORM, VARYING
+		QualifierStorage_None,
+		QualifierStorage_Const,
+		QualifierStorage_Attribute,
+		QualifierStorage_Uniform,
+		QualifierStorage_Varying
 	} typedef QualifierStorage;
 		
-	enum : size_t // Will probably just make this a string instead of enum
+	enum : size_t
 	{
-		NONE, 
-		BOOL, 
-		BVEC2, BVEC3, BVEC4, 
-		DOUBLE, 
-		DVEC2, DVEC3, DVEC4, 
-		INT, 
-		IVEC2, IVEC3, IVEC4, 
-		DMAT2, DMAT2X2, DMAT2X3, DMAT2X4, 
-		DMAT3, DMAT3X2, DMAT3X3, DMAT3X4, 
-		DMAT4, DMAT4X2, DMAT4X3, DMAT4X4, 
-		FLOAT, 
-		MAT2, MAT2X2, MAT2X3, MAT2X4, 
-		MAT3, MAT3X2, MAT3X3, MAT3X4, 
-		MAT4, MAT4X2, MAT4X3, MAT4X4, 
-		SAMPLER1D, SAMPLER2D, SAMPLER2DSHADOW, SAMPLER3D, SAMPLERCUBE, 
-		UINT, 
-		UVEC2, UVEC3, UVEC4, 
-		VEC2, VEC3, VEC4
+		QualifierType_None,
+		QualifierType_Bool,
+		QualifierType_BVec2, QualifierType_BVec3, QualifierType_BVec4,
+		QualifierType_Double,
+		QualifierType_DVec2, QualifierType_DVec3, QualifierType_DVec4,
+		QualifierType_Int,
+		QualifierType_IVec2, QualifierType_IVec3, QualifierType_IVec4,
+		QualifierType_DMat2, QualifierType_DMat2x2, QualifierType_DMat2x3, QualifierType_DMat2x4,
+		QualifierType_DMat3, QualifierType_DMat3x2, QualifierType_DMat3x3, QualifierType_DMat3x4,
+		QualifierType_DMat4, QualifierType_DMat4x2, QualifierType_DMat4x3, QualifierType_DMat4x4,
+		QualifierType_Float,
+		QualifierType_Mat2, QualifierType_Mat2x2, QualifierType_Mat2x3, QualifierType_Mat2x4,
+		QualifierType_Mat3, QualifierType_Mat3x2, QualifierType_Mat3x3, QualifierType_Mat3x4,
+		QualifierType_Mat4, QualifierType_Mat4x2, QualifierType_Mat4x3, QualifierType_Mat4x4,
+		QualifierType_Sampler1d, QualifierType_Sampler2d, QualifierType_Sampler2dShadow,
+		QualifierType_Sampler3d, QualifierType_SamplerCube,
+		QualifierType_UINT,
+		QualifierType_UVec2, QualifierType_UVec3, QualifierType_UVec4,
+		QualifierType_Vec2, QualifierType_Vec3, QualifierType_Vec4
 	} typedef QualifierType;
 
 	class Qualifier
@@ -49,9 +62,89 @@ protected:
 		QualifierPrecision				mPrecision;
 		QualifierStorage				mStorage;
 		QualifierType					mType;
+		std::string						mValue;
 	};
-
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
+protected:
+	enum : size_t
+	{
+		OperatorType_Add,
+		OperatorType_Multiply,
+		OperatorType_Subtract,
+		OperatorType_Divide,
+		OperatorType_Modulate
+	} typedef OperatorType;
+	
+	struct Routine
+	{
+		OperatorType					mOperatorType;
+		std::string						mRoutine;
+	};
+	
 	std::map<std::string, Qualifier>	mQualifiers;
+	std::vector<Routine>				mRoutines;
+	
+	void								mergeQualifiers( const std::map<std::string, Qualifier>& q );
+public:
+	Operation();
+	
+	Operation operator+( const Operation& rhs );
+	Operation operator*( const Operation& rhs );
+	Operation operator-( const Operation& rhs );
+	Operation operator/( const Operation& rhs );
+	Operation operator%( const Operation& rhs );
+	
+	void operator+=( const Operation& rhs );
+	void operator*=( const Operation& rhs );
+	void operator-=( const Operation& rhs );
+	void operator/=( const Operation& rhs );
+	void operator%=( const Operation& rhs );
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	class Exception : public cinder::Exception
+	{
+	public:
+		Exception( const std::string& msg ) throw();
+		virtual const char* what() const throw()
+		{
+			return mMessage;
+		}
+	private:
+		char mMessage[ 2048 ];
+	};
+	
+	class ExcQualifierMergeCountMismatch : public Exception
+	{
+	public:
+		ExcQualifierMergeCountMismatch( const std::string& msg ) throw();
+	};
+	
+	class ExcQualifierMergePrecisionMismatch : public Exception
+	{
+	public:
+		ExcQualifierMergePrecisionMismatch( const std::string& msg ) throw();
+	};
+	
+	class ExcQualifierMergeStorageMismatch : public Exception
+	{
+	public:
+		ExcQualifierMergeStorageMismatch( const std::string& msg ) throw();
+	};
+	
+	class ExcQualifierMergeTypeMismatch : public Exception
+	{
+	public:
+		ExcQualifierMergeTypeMismatch( const std::string& msg ) throw();
+	};
+	
+	class ExcQualifierMergeValueMismatch : public Exception
+	{
+	public:
+		ExcQualifierMergeValueMismatch( const std::string& msg ) throw();
+	};
 };
 
 } } }

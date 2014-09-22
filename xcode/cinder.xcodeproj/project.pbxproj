@@ -1092,6 +1092,12 @@
 		B06DE70319C74935008B9E1B /* Query.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B06DE70219C74935008B9E1B /* Query.cpp */; };
 		B06DE70419C74935008B9E1B /* Query.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B06DE70219C74935008B9E1B /* Query.cpp */; };
 		B06DE70519C74935008B9E1B /* Query.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B06DE70219C74935008B9E1B /* Query.cpp */; };
+		BF8F24C319D0A85200C6015E /* Effect.h in Headers */ = {isa = PBXBuildFile; fileRef = BF8F24C219D0A85200C6015E /* Effect.h */; };
+		BF8F24C419D0A85200C6015E /* Effect.h in Headers */ = {isa = PBXBuildFile; fileRef = BF8F24C219D0A85200C6015E /* Effect.h */; };
+		BF8F24C519D0A85200C6015E /* Effect.h in Headers */ = {isa = PBXBuildFile; fileRef = BF8F24C219D0A85200C6015E /* Effect.h */; };
+		BF8F24C719D0A9A200C6015E /* Effect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8F24C619D0A9A200C6015E /* Effect.cpp */; };
+		BF8F24C819D0A9A200C6015E /* Effect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8F24C619D0A9A200C6015E /* Effect.cpp */; };
+		BF8F24C919D0A9A200C6015E /* Effect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8F24C619D0A9A200C6015E /* Effect.cpp */; };
 		C70E19FF106AA38700E63577 /* Buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = C70E19FE106AA38700E63577 /* Buffer.h */; };
 		C70E1A03106AA39D00E63577 /* Buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C70E1A01106AA39D00E63577 /* Buffer.cpp */; };
 		C727BFE5121B3AE600192073 /* Capture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 007438400EA7924F005DD3E6 /* Capture.cpp */; };
@@ -1590,6 +1596,8 @@
 		5391FD670E957646002A13D5 /* KeyEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeyEvent.h; path = app/KeyEvent.h; sourceTree = "<group>"; };
 		B0245F5819BEDF3200BC878D /* Query.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Query.h; path = gl/Query.h; sourceTree = "<group>"; };
 		B06DE70219C74935008B9E1B /* Query.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Query.cpp; path = gl/Query.cpp; sourceTree = "<group>"; };
+		BF8F24C219D0A85200C6015E /* Effect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Effect.h; path = gl/Effect.h; sourceTree = "<group>"; };
+		BF8F24C619D0A9A200C6015E /* Effect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Effect.cpp; path = gl/Effect.cpp; sourceTree = "<group>"; };
 		C70E19FE106AA38700E63577 /* Buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Buffer.h; sourceTree = "<group>"; };
 		C70E1A01106AA39D00E63577 /* Buffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Buffer.cpp; sourceTree = "<group>"; };
 		C7B92EF5121C828400093AFE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
@@ -2117,6 +2125,7 @@
 		00CE73910E92DBD60059E09B /* gl */ = {
 			isa = PBXGroup;
 			children = (
+				BF8F24C219D0A85200C6015E /* Effect.h */,
 				0003F4261992D67300647C8B /* Batch.h */,
 				0003F4271992D67300647C8B /* BufferObj.h */,
 				0003F4281992D67300647C8B /* BufferTexture.h */,
@@ -2144,6 +2153,7 @@
 		00CE73960E92DBEB0059E09B /* gl */ = {
 			isa = PBXGroup;
 			children = (
+				BF8F24C619D0A9A200C6015E /* Effect.cpp */,
 				0003F3BE1992D64100647C8B /* Batch.cpp */,
 				0003F3BF1992D64100647C8B /* BufferObj.cpp */,
 				0003F3C01992D64100647C8B /* BufferTexture.cpp */,
@@ -2643,6 +2653,7 @@
 				007050211114F93F003FCAE4 /* Font.h in Headers */,
 				007050231114F93F003FCAE4 /* Text.h in Headers */,
 				0003F44C1992D67300647C8B /* Fbo.h in Headers */,
+				BF8F24C419D0A85200C6015E /* Effect.h in Headers */,
 				007050241114F93F003FCAE4 /* Renderer.h in Headers */,
 				007050251114F93F003FCAE4 /* Serial.h in Headers */,
 				007050271114F93F003FCAE4 /* Params.h in Headers */,
@@ -2814,6 +2825,7 @@
 				111A5F2F191F7285005C3166 /* codebook.h in Headers */,
 				0003F46B1992D67300647C8B /* Vao.h in Headers */,
 				00CFD9891135C3520091E310 /* System.h in Headers */,
+				BF8F24C519D0A85200C6015E /* Effect.h in Headers */,
 				00CFD98A1135C3520091E310 /* Buffer.h in Headers */,
 				00CFD98B1135C3520091E310 /* Exception.h in Headers */,
 				B0245F5B19BEDF3200BC878D /* Query.h in Headers */,
@@ -3072,6 +3084,7 @@
 				00A1140E1355369A00081873 /* priorityq.h in Headers */,
 				111A5EA7191F703D005C3166 /* backends.h in Headers */,
 				0003F45D1992D67300647C8B /* Texture.h in Headers */,
+				BF8F24C319D0A85200C6015E /* Effect.h in Headers */,
 				111A5ED4191F703D005C3166 /* setup_44u.h in Headers */,
 				00A114101355369A00081873 /* sweep.h in Headers */,
 				00A114121355369A00081873 /* tess.h in Headers */,
@@ -3372,6 +3385,7 @@
 				0034C322151A5B9F003F2E30 /* linebreak.c in Sources */,
 				111A6002191F72AE005C3166 /* SampleRecorderNode.cpp in Sources */,
 				0034C328151A5B9F003F2E30 /* linebreakdata.c in Sources */,
+				BF8F24C819D0A9A200C6015E /* Effect.cpp in Sources */,
 				0003F4091992D64100647C8B /* TextureFormatParsers.cpp in Sources */,
 				111A5FF3191F72AE005C3166 /* NodeMath.cpp in Sources */,
 				111A5F5A191F7286005C3166 /* envelope.c in Sources */,
@@ -3551,6 +3565,7 @@
 				0034C32C151A5B9F003F2E30 /* linebreakdef.c in Sources */,
 				111A6003191F72AE005C3166 /* SampleRecorderNode.cpp in Sources */,
 				005B0300152CD16E00F2C237 /* json_reader.cpp in Sources */,
+				BF8F24C919D0A9A200C6015E /* Effect.cpp in Sources */,
 				0003F40A1992D64100647C8B /* TextureFormatParsers.cpp in Sources */,
 				111A5FF4191F72AE005C3166 /* NodeMath.cpp in Sources */,
 				111A5F31191F7285005C3166 /* envelope.c in Sources */,
@@ -3715,6 +3730,7 @@
 				00A114071355369A00081873 /* dict.c in Sources */,
 				0003F40B1992D64100647C8B /* TransformFeedbackObj.cpp in Sources */,
 				00A114091355369A00081873 /* geom.c in Sources */,
+				BF8F24C719D0A9A200C6015E /* Effect.cpp in Sources */,
 				00A1140B1355369A00081873 /* mesh.c in Sources */,
 				0003F4141992D64100647C8B /* Vao.cpp in Sources */,
 				00A1140D1355369A00081873 /* priorityq.c in Sources */,
