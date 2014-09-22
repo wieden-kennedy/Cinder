@@ -27,9 +27,9 @@ public:
 	{
 		QualifierStorage_None,
 		QualifierStorage_Const,
-		QualifierStorage_Attribute,
-		QualifierStorage_Uniform,
-		QualifierStorage_Varying
+		QualifierStorage_Input,
+		QualifierStorage_Output,
+		QualifierStorage_Uniform
 	} typedef QualifierStorage;
 		
 	enum : size_t
@@ -50,7 +50,7 @@ public:
 		QualifierType_Mat4, QualifierType_Mat4x2, QualifierType_Mat4x3, QualifierType_Mat4x4,
 		QualifierType_Sampler1d, QualifierType_Sampler2d, QualifierType_Sampler2dShadow,
 		QualifierType_Sampler3d, QualifierType_SamplerCube,
-		QualifierType_UINT,
+		QualifierType_Uint,
 		QualifierType_UVec2, QualifierType_UVec3, QualifierType_UVec4,
 		QualifierType_Vec2, QualifierType_Vec3, QualifierType_Vec4
 	} typedef QualifierType;

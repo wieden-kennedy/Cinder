@@ -136,20 +136,206 @@ string Operation::toString() const
 		const Qualifier& q	= iter->second;
 		string name			= iter->first;
 		string line			= "";
+		
 		string storage		= "";
+		switch ( q.mStorage ) {
+			case QualifierStorage_Const:
+				storage = "const";
+				break;
+			case QualifierStorage_Input:
+#if defined ( CINDER_GL_ES_2 )
+				storage = "attribute";
+#else
+				storage = "in";
+#endif
+				break;
+			case QualifierStorage_None:
+				break;
+			case QualifierStorage_Output:
+#if defined ( CINDER_GL_ES_2 )
+				storage = "varying";
+#else
+				storage = "out";
+#endif
+				break;
+			case QualifierStorage_Uniform:
+				storage = "uniform";
+				break;
+		}
+		
 #if defined ( CINDER_GL_ES_2 )
 		string precision	= "";
+		switch ( q.mPrecision ) {
+			case QualifierPrecision_High:
+				precision = "highp";
+				break;
+			case QualifierPrecision_Low:
+				precision = "lowp";
+				break;
+			case QualifierPrecision_Medium:
+				precision = "medp";
+				break;
+			case QualifierPrecision_None:
+				break;
+		}
 #endif
-		string type			= "";
+		
+		// TODO consider ES2
+		string type = "";
 		switch ( q.mType ) {
 			case QualifierType_Bool:
-				
+				type = "";
+				break;
+			case QualifierType_BVec2:
+				type = "";
+				break;
+			case QualifierType_BVec3:
+				type = "";
+				break;
+			case QualifierType_BVec4:
+				type = "";
+				break;
+			case QualifierType_Double:
+				type = "";
+				break;
+			case QualifierType_DVec2:
+				type = "";
+				break;
+			case QualifierType_DVec3:
+				type = "";
+				break;
+			case QualifierType_DVec4:
+				type = "";
+				break;
+			case QualifierType_Int:
+				type = "";
+				break;
+			case QualifierType_IVec2:
+				type = "";
+				break;
+			case QualifierType_IVec3:
+				type = "";
+				break;
+			case QualifierType_IVec4:
+				type = "";
+				break;
+			case QualifierType_DMat2:
+				type = "";
+				break;
+			case QualifierType_DMat2x2:
+				type = "";
+				break;
+			case QualifierType_DMat2x3:
+				type = "";
+				break;
+			case QualifierType_DMat2x4:
+				type = "";
+				break;
+			case QualifierType_DMat3:
+				type = "";
+				break;
+			case QualifierType_DMat3x2:
+				type = "";
+				break;
+			case QualifierType_DMat3x3:
+				type = "";
+				break;
+			case QualifierType_DMat3x4:
+				type = "";
+				break;
+			case QualifierType_DMat4:
+				type = "";
+				break;
+			case QualifierType_DMat4x2:
+				type = "";
+				break;
+			case QualifierType_DMat4x3:
+				type = "";
+				break;
+			case QualifierType_DMat4x4:
+				type = "";
+				break;
+			case QualifierType_Float:
+				type = "";
+				break;
+			case QualifierType_Mat2:
+				type = "";
+				break;
+			case QualifierType_Mat2x2:
+				type = "";
+				break;
+			case QualifierType_Mat2x3:
+				type = "";
+				break;
+			case QualifierType_Mat2x4:
+				type = "";
+				break;
+			case QualifierType_Mat3:
+				type = "";
+				break;
+			case QualifierType_Mat3x2:
+				type = "";
+				break;
+			case QualifierType_Mat3x3:
+				type = "";
+				break;
+			case QualifierType_Mat3x4:
+				type = "";
+				break;
+			case QualifierType_Mat4:
+				type = "";
+				break;
+			case QualifierType_Mat4x2:
+				type = "";
+				break;
+			case QualifierType_Mat4x3:
+				type = "";
+				break;
+			case QualifierType_Mat4x4:
+				type = "";
+				break;
+			case QualifierType_None:
+				break;
+			case QualifierType_Sampler1d:
+				type = "";
+				break;
+			case QualifierType_Sampler2d:
+				type = "";
+				break;
+			case QualifierType_Sampler2dShadow:
+				type = "";
+				break;
+			case QualifierType_Sampler3d:
+				type = "";
+				break;
+			case QualifierType_SamplerCube:
+				type = "";
+				break;
+			case QualifierType_Uint:
+				type = "";
+				break;
+			case QualifierType_UVec2:
+				type = "";
+				break;
+			case QualifierType_UVec3:
+				type = "";
+				break;
+			case QualifierType_UVec4:
+				type = "";
+				break;
+			case QualifierType_Vec2:
+				type = "";
+				break;
+			case QualifierType_Vec3:
+				type = "";
+				break;
+			case QualifierType_Vec4:
+				type = "";
 				break;
 				
 				
-				
 				/*
-				 Leaving this here for later use
+				 TODO put these string up there ^
 				 
 				 bool
 				 bvec2
@@ -165,14 +351,6 @@ string Operation::toString() const
 				 ivec2
 				 ivec3
 				 ivec4
-				 
-				 uvec2
-				 uvec3
-				 uvec4
-				 
-				 vec2
-				 vec3
-				 vec4
 				 
 				 dmat2
 				 dmat2x2
@@ -209,15 +387,45 @@ string Operation::toString() const
 				 sampler2DShadow
 				 sampler3D
 				 samplerCube
+				 
+				 uvec2
+				 uvec3
+				 uvec4
+				 
+				 vec2
+				 vec3
+				 vec4
 				 */
 		}
 		
+		if ( !storage.empty() ) {
+			line = storage + " ";
+		}
+#if defined ( CINDER_GL_ES_2 )
+		if ( !precision.empty() ) {
+			line += precision + " ";
+		}
+#endif
+		if ( !type.empty() ) {
+			line += type + " ";
+		}
+		line += name;
+		
 		if ( q.mCount > 1 ) {
-			line			+= "[" + cinder::toString( q.mCount ) + "]";
+			line += "[" + cinder::toString( q.mCount ) + "]";
 		}
 		if ( !q.mValue.empty() ) {
+			line += " = " + q.mValue;
 		}
+		
+		line	+= ";\n\r";
+		output	+= line;
 	}
+	
+	output += "\n\rvoid main( void ) {\n\r";
+	// TODO add body
+	output += "}\r";
+	
 	return output;
 }
 	
@@ -272,21 +480,21 @@ VertexOperation::VertexOperation()
 VertexPassThrough::VertexPassThrough()
 : VertexOperation()
 {
-	Qualifier a4;
-	a4.mStorage	= QualifierStorage_Attribute;
-	a4.mType	= QualifierType_Vec4;
+	Qualifier i4;
+	i4.mStorage	= QualifierStorage_Input;
+	i4.mType	= QualifierType_Vec4;
 	
-	Qualifier v4;
-	v4.mStorage	= QualifierStorage_Varying;
-	v4.mType	= QualifierType_Vec4;
+	Qualifier o4;
+	o4.mStorage	= QualifierStorage_Output;
+	o4.mType	= QualifierType_Vec4;
 	
 	Qualifier u4x4;
 	u4x4.mStorage	= QualifierStorage_Uniform;
 	u4x4.mType		= QualifierType_Mat4;
 	
-	mQualifiers[ "ciPosition" ]				= a4;
-	mQualifiers[ "ciTexCoord0" ]			= a4;
-	mQualifiers[ "vTexCoord0" ]				= v4;
+	mQualifiers[ "ciPosition" ]				= i4;
+	mQualifiers[ "ciTexCoord0" ]			= i4;
+	mQualifiers[ "vTexCoord0" ]				= o4;
 	mQualifiers[ "ciModelViewProjection" ]	= u4x4;
 	
 	mRoutines.front().mRoutine	= "vTexCoord0 = ciTexCoord0;";
@@ -298,15 +506,15 @@ VertexPassThrough::VertexPassThrough()
 FragmentTexture::FragmentTexture()
 : FragmentOperation()
 {
-	Qualifier v4;
-	v4.mStorage	= QualifierStorage_Attribute;
-	v4.mType	= QualifierType_Vec4;
+	Qualifier i4;
+	i4.mStorage	= QualifierStorage_Input;
+	i4.mType	= QualifierType_Vec4;
 	
 	Qualifier uSampler2d;
 	uSampler2d.mStorage	= QualifierStorage_Uniform;
 	uSampler2d.mType	= QualifierType_Sampler2d;
 	
-	mQualifiers[ "vTexCoord0" ] = v4;
+	mQualifiers[ "vTexCoord0" ] = i4;
 	mQualifiers[ "uTexture" ]	= uSampler2d;
 	
 	mRoutines.front().mRoutine	= "vec4 color = texture( uTexture, vTexCoord0.st );";
