@@ -77,8 +77,11 @@ protected:
 		OperatorType_Modulate
 	} typedef OperatorType;
 	
-	struct Routine
+	class Routine
 	{
+	public:
+		Routine();
+		
 		OperatorType					mOperatorType;
 		std::string						mRoutine;
 	};
@@ -152,7 +155,7 @@ public:
  
 
 /*
-Leaving his here for later use
+Leaving this here for later use
 
 bool
 bvec2
