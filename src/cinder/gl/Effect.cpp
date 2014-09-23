@@ -168,7 +168,6 @@ string Operation::qualifiersToString() const
 		}
 #endif
 		
-		// TODO consider ES2
 		string type = "";
 		switch ( q.mType ) {
 			case QualifierType_Bool:
