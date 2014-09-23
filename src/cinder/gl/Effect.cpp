@@ -71,13 +71,6 @@ Operation Operation::operator/( const Operation& rhs )
 	return lhs;
 }
 
-Operation Operation::operator%( const Operation& rhs )
-{
-	Operation lhs = *this;
-	lhs %= rhs;
-	return lhs;
-}
-
 void Operation::operator+=( const Operation& rhs )
 {
 	merge( rhs, OperatorType_Add );
@@ -96,11 +89,6 @@ void Operation::operator-=( const Operation& rhs )
 void Operation::operator/=( const Operation& rhs )
 {
 	merge( rhs, OperatorType_Divide );
-}
-
-void Operation::operator%=( const Operation& rhs )
-{
-	merge( rhs, OperatorType_Modulate );
 }
 	
 void Operation::mergeQualifiers( const map<string, Operation::Qualifier>& q )
@@ -129,7 +117,7 @@ void Operation::mergeQualifiers( const map<string, Operation::Qualifier>& q )
 	}
 }
 
-string Operation::toString() const
+string Operation::qualifiersToString() const
 {
 	string output = "";
 	for ( map<string, Operation::Qualifier>::const_iterator iter = mQualifiers.begin(); iter != mQualifiers.end(); ++iter ) {
@@ -184,218 +172,154 @@ string Operation::toString() const
 		string type = "";
 		switch ( q.mType ) {
 			case QualifierType_Bool:
-				type = "";
+				type = "bool";
 				break;
 			case QualifierType_BVec2:
-				type = "";
+				type = "bvec2";
 				break;
 			case QualifierType_BVec3:
-				type = "";
+				type = "bvec3";
 				break;
 			case QualifierType_BVec4:
-				type = "";
+				type = "bvec4";
 				break;
 			case QualifierType_Double:
-				type = "";
+				type = "double";
 				break;
 			case QualifierType_DVec2:
-				type = "";
+				type = "dvec2";
 				break;
 			case QualifierType_DVec3:
-				type = "";
+				type = "dvec3";
 				break;
 			case QualifierType_DVec4:
-				type = "";
-				break;
-			case QualifierType_Int:
-				type = "";
-				break;
-			case QualifierType_IVec2:
-				type = "";
-				break;
-			case QualifierType_IVec3:
-				type = "";
-				break;
-			case QualifierType_IVec4:
-				type = "";
+				type = "dvec4";
 				break;
 			case QualifierType_DMat2:
-				type = "";
+				type = "dmat2";
 				break;
 			case QualifierType_DMat2x2:
-				type = "";
+				type = "dmat2x2";
 				break;
 			case QualifierType_DMat2x3:
-				type = "";
+				type = "dmat2x3";
 				break;
 			case QualifierType_DMat2x4:
-				type = "";
+				type = "dmat2x4";
 				break;
 			case QualifierType_DMat3:
-				type = "";
+				type = "dmat";
 				break;
 			case QualifierType_DMat3x2:
-				type = "";
+				type = "dmat3x2";
 				break;
 			case QualifierType_DMat3x3:
-				type = "";
+				type = "dmat3x3";
 				break;
 			case QualifierType_DMat3x4:
-				type = "";
+				type = "dmat3x4";
 				break;
 			case QualifierType_DMat4:
-				type = "";
+				type = "dmat4";
 				break;
 			case QualifierType_DMat4x2:
-				type = "";
+				type = "dmat4x2";
 				break;
 			case QualifierType_DMat4x3:
-				type = "";
+				type = "dmat4x3";
 				break;
 			case QualifierType_DMat4x4:
-				type = "";
+				type = "dmat4x4";
 				break;
 			case QualifierType_Float:
-				type = "";
+				type = "float";
+				break;
+			case QualifierType_Int:
+				type = "int";
+				break;
+			case QualifierType_IVec2:
+				type = "ive2c";
+				break;
+			case QualifierType_IVec3:
+				type = "ivec3";
+				break;
+			case QualifierType_IVec4:
+				type = "ivec4";
 				break;
 			case QualifierType_Mat2:
-				type = "";
+				type = "mat2";
 				break;
 			case QualifierType_Mat2x2:
-				type = "";
+				type = "mat2x2";
 				break;
 			case QualifierType_Mat2x3:
-				type = "";
+				type = "mat2x3";
 				break;
 			case QualifierType_Mat2x4:
-				type = "";
+				type = "mat2x4";
 				break;
 			case QualifierType_Mat3:
-				type = "";
+				type = "mat3";
 				break;
 			case QualifierType_Mat3x2:
-				type = "";
+				type = "mat3x2";
 				break;
 			case QualifierType_Mat3x3:
-				type = "";
+				type = "mat3x3";
 				break;
 			case QualifierType_Mat3x4:
-				type = "";
+				type = "mat3x4";
 				break;
 			case QualifierType_Mat4:
-				type = "";
+				type = "mat4";
 				break;
 			case QualifierType_Mat4x2:
-				type = "";
+				type = "mat4x2";
 				break;
 			case QualifierType_Mat4x3:
-				type = "";
+				type = "mat4x3";
 				break;
 			case QualifierType_Mat4x4:
-				type = "";
+				type = "mat4x4";
 				break;
 			case QualifierType_None:
 				break;
 			case QualifierType_Sampler1d:
-				type = "";
+				type = "sampler1D";
 				break;
 			case QualifierType_Sampler2d:
-				type = "";
+				type = "sampler2D";
 				break;
 			case QualifierType_Sampler2dShadow:
-				type = "";
+				type = "sampler2DShadow";
 				break;
 			case QualifierType_Sampler3d:
-				type = "";
+				type = "sampler3D";
 				break;
 			case QualifierType_SamplerCube:
-				type = "";
+				type = "samplerCube";
 				break;
 			case QualifierType_Uint:
-				type = "";
+				type = "uint";
 				break;
 			case QualifierType_UVec2:
-				type = "";
+				type = "uvec2";
 				break;
 			case QualifierType_UVec3:
-				type = "";
+				type = "uvec3";
 				break;
 			case QualifierType_UVec4:
-				type = "";
+				type = "uvec4";
 				break;
 			case QualifierType_Vec2:
-				type = "";
+				type = "vec2";
 				break;
 			case QualifierType_Vec3:
-				type = "";
+				type = "vec3";
 				break;
 			case QualifierType_Vec4:
-				type = "";
+				type = "vec4";
 				break;
-				
-				
-				/*
-				 TODO put these string up there ^
-				 
-				 bool
-				 bvec2
-				 bvec3
-				 bvec4
-				 
-				 double
-				 dvec2
-				 dvec3
-				 dvec4
-				 
-				 int
-				 ivec2
-				 ivec3
-				 ivec4
-				 
-				 dmat2
-				 dmat2x2
-				 dmat2x3
-				 dmat2x4
-				 dmat3
-				 dmat3x2
-				 dmat3x3
-				 dmat3x4
-				 dmat4
-				 dmat4x2
-				 dmat4x3
-				 dmat4x4
-				 
-				 float
-				 
-				 mat2
-				 mat2x2
-				 mat2x3
-				 mat2x4
-				 mat3
-				 mat3x2
-				 mat3x3
-				 mat3x4
-				 mat4
-				 mat4x2
-				 mat4x3
-				 mat4x4
-				 
-				 uint
-				 
-				 sampler1D
-				 sampler2D
-				 sampler2DShadow
-				 sampler3D
-				 samplerCube
-				 
-				 uvec2
-				 uvec3
-				 uvec4
-				 
-				 vec2
-				 vec3
-				 vec4
-				 */
 		}
 		
 		if ( !storage.empty() ) {
@@ -418,14 +342,19 @@ string Operation::toString() const
 			line += " = " + q.mValue;
 		}
 		
-		line	+= ";\n\r";
+		line	+= ";\r\n";
 		output	+= line;
 	}
 	
-	output += "\n\rvoid main( void ) {\n\r";
-	// TODO add body
-	output += "}\r";
-	
+	return output;
+}
+
+string Operation::toString() const
+{
+	string output	= qualifiersToString();
+	output			+= "\r\nvoid main( void ) {\r\n";
+
+	output			+= "}\r";
 	return output;
 }
 	
@@ -464,15 +393,118 @@ Operation::ExcQualifierMergeValueMismatch::ExcQualifierMergeValueMismatch( const
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
+	
 FragmentOperation::FragmentOperation()
 : Operation()
 {
 }
 
+string FragmentOperation::toString() const
+{
+	string output = qualifiersToString();
+#if !defined( CINDER_GL_ES_2 )
+	output += "out vec4 gl_FragColor;\r\n";
+#endif
+	output += "\r\nvoid main( void ) {\r\n";
+	
+	string resultName = "ciResult";
+	size_t i = 0;
+	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
+		string index	= cinder::toString( i );
+		string block	= "\t";
+#if defined( CINDER_GL_ES_2 )
+		block			+= "highp ";
+#endif
+		block			+= "vec4 " + resultName + index + ";\r\n";
+		block			+= "\t{\r\n";
+		block			+= "\t\t" + iter->mRoutine;
+		block			+= "\t}\r\n";
+		block			+= "\t" + resultName + index + " = " + iter->mResult + ";\r\n";
+	}
+
+	output += "\tgl_FragColor = ";
+#if defined( CINDER_GL_ES_2 )
+	output += "highp ";
+#endif
+	output += "vec4( 0.0, 0.0, 0.0, 0.0 )";
+	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
+		output += " ";
+		switch ( iter->mOperatorType ) {
+		case OperatorType_Add:
+			output += "+";
+			break;
+		case OperatorType_Divide:
+			output += "/";
+			break;
+		case OperatorType_Multiply:
+			output += "*";
+			break;
+		case OperatorType_Subtract:
+			output += "-";
+			break;
+		}
+		string index	= cinder::toString( i );
+		output			+= " " + resultName + index;
+	}
+
+	output += ";\r\n";
+	output += "}\r";
+	return output;
+}
+
 VertexOperation::VertexOperation()
 : Operation()
 {
+}
+
+string VertexOperation::toString() const
+{
+	string output	= qualifiersToString();
+	output			+= "\r\nvoid main( void ) {\r\n";
+	
+	string resultName = "ciResult";
+	size_t i = 0;
+	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
+		string index	= cinder::toString( i );
+		string block	= "\t";
+#if defined( CINDER_GL_ES_2 )
+		block			+= "highp ";
+#endif
+		block			+= "vec4 " + resultName + index + ";\r\n";
+		block			+= "\t{\r\n";
+		block			+= "\t\t" + iter->mRoutine;
+		block			+= "\t}\r\n";
+		block			+= "\t" + resultName + index + " = " + iter->mResult + ";\r\n";
+	}
+
+	output += "\tgl_Position = ";
+#if defined( CINDER_GL_ES_2 )
+	output += "highp ";
+#endif
+	output += "vec4( 0.0, 0.0, 0.0, 0.0 )";
+	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
+		output += " ";
+		switch ( iter->mOperatorType ) {
+		case OperatorType_Add:
+			output += "+";
+			break;
+		case OperatorType_Divide:
+			output += "/";
+			break;
+		case OperatorType_Multiply:
+			output += "*";
+			break;
+		case OperatorType_Subtract:
+			output += "-";
+			break;
+		}
+		string index	= cinder::toString( i );
+		output			+= " " + resultName + index;
+	}
+
+	output += ";\r\n";
+	output += "}\r";
+	return output;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -520,7 +552,95 @@ FragmentTexture::FragmentTexture()
 	mRoutines.front().mRoutine	= "vec4 color = texture( uTexture, vTexCoord0.st );";
 	mRoutines.front().mResult	= "color;";
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+FragmentExposure::FragmentExposure( FragmentOperation* op )
+: FragmentOperation(), mInput( op )
+{
+	setExposureUniform( "uExposure" );
+	setOffsetUniform( "uOffset" );
+}
+
+FragmentExposure& FragmentExposure::exposure( const string& uniformName )
+{
+	setExposureUniform( uniformName );
+	return *this;
+}
+
+FragmentExposure& FragmentExposure::input( FragmentOperation* op )
+{
+	setInput( op );
+	return *this;
+}
+
+FragmentExposure& FragmentExposure::offset( const string& uniformName )
+{
+	setOffsetUniform( uniformName );
+	return *this;
+}
+
+const string& FragmentExposure::getExposureUniform() const
+{
+	return mUniformExposure;
+}
+
+FragmentOperation* FragmentExposure::getInput() const
+{
+	return mInput;
+}
+
+const string& FragmentExposure::getOffsetUniform() const{
+	return mUniformExposure;
+}
+
+void FragmentExposure::setExposureUniform( const string& uniformName )
+{
+	if ( mQualifiers.find( mUniformExposure ) != mQualifiers.end() ) {
+		mQualifiers.erase( mUniformExposure );
+	}
+	mUniformExposure = uniformName;
+	setUniform( uniformName );
+}
+
+FragmentExposure& FragmentExposure::setInput( FragmentOperation* op )
+{
+	mInput = op;
+}
+
+void FragmentExposure::setOffsetUniform( const string& uniformName )
+{
+	if ( mQualifiers.find( mUniformOffset ) != mQualifiers.end() ) {
+		mQualifiers.erase( mUniformOffset );
+	}
+	mUniformOffset = uniformName;
+	setUniform( uniformName );
+}
+
+void FragmentExposure::setUniform( const std::string& uniformName )
+{
+	Qualifier uf;
+	uf.mStorage	= QualifierStorage_Uniform;
+	uf.mType	= QualifierType_Float;
+
+	mQualifiers[ uniformName ] = uf;
+}
+
+string FragmentExposure::toString() const
+{
+	FragmentOperation op = *this;
+	map<string, Operation::Qualifier> q = mInput->mQualifiers;
+	op.mergeQualifiers( q );
+
+	// TODO 
+	// write input operation's result to local var
+	// use result as input for exposure
 	
+	string output = op.qualifiersToString();
+
+	return "";
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 

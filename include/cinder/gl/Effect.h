@@ -39,12 +39,12 @@ public:
 		QualifierType_BVec2, QualifierType_BVec3, QualifierType_BVec4,
 		QualifierType_Double,
 		QualifierType_DVec2, QualifierType_DVec3, QualifierType_DVec4,
-		QualifierType_Int,
-		QualifierType_IVec2, QualifierType_IVec3, QualifierType_IVec4,
 		QualifierType_DMat2, QualifierType_DMat2x2, QualifierType_DMat2x3, QualifierType_DMat2x4,
 		QualifierType_DMat3, QualifierType_DMat3x2, QualifierType_DMat3x3, QualifierType_DMat3x4,
 		QualifierType_DMat4, QualifierType_DMat4x2, QualifierType_DMat4x3, QualifierType_DMat4x4,
 		QualifierType_Float,
+		QualifierType_Int,
+		QualifierType_IVec2, QualifierType_IVec3, QualifierType_IVec4,
 		QualifierType_Mat2, QualifierType_Mat2x2, QualifierType_Mat2x3, QualifierType_Mat2x4,
 		QualifierType_Mat3, QualifierType_Mat3x2, QualifierType_Mat3x3, QualifierType_Mat3x4,
 		QualifierType_Mat4, QualifierType_Mat4x2, QualifierType_Mat4x3, QualifierType_Mat4x4,
@@ -71,14 +71,13 @@ public:
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-protected:
+//protected:
 	enum : size_t
 	{
 		OperatorType_Add,
+		OperatorType_Divide,
 		OperatorType_Multiply,
 		OperatorType_Subtract,
-		OperatorType_Divide,
-		OperatorType_Modulate
 	} typedef OperatorType;
 	
 	class Routine
@@ -96,6 +95,7 @@ protected:
 	
 	void								merge( const Operation& rhs, OperatorType type );
 	void								mergeQualifiers( const std::map<std::string, Qualifier>& q );
+	std::string							qualifiersToString() const;
 public:
 	Operation();
 	
@@ -103,13 +103,13 @@ public:
 	Operation 							operator*( const Operation& rhs );
 	Operation 							operator-( const Operation& rhs );
 	Operation 							operator/( const Operation& rhs );
-	Operation 							operator%( const Operation& rhs );
 	
 	void								operator+=( const Operation& rhs );
 	void								operator*=( const Operation& rhs );
 	void								operator-=( const Operation& rhs );
 	void								operator/=( const Operation& rhs );
-	void								operator%=( const Operation& rhs );
+
+	// TODO dot, cross, etc
 	
 	virtual std::string					toString() const;
 	
@@ -166,12 +166,16 @@ class FragmentOperation : public Operation
 {
 public:
 	FragmentOperation();
+
+	virtual std::string	toString() const;
 };
-	
+
 class VertexOperation : public Operation
 {
 public:
 	VertexOperation();
+
+	virtual std::string	toString() const;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,6 +192,32 @@ class FragmentTexture : public FragmentOperation
 {
 public:
 	FragmentTexture();
+};
+
+class FragmentExposure : public FragmentOperation
+{
+public:
+	FragmentExposure( FragmentOperation* op = nullptr );
+
+	FragmentExposure&	exposure( const std::string& uniformName );
+	FragmentExposure&	input( FragmentOperation* op );
+	FragmentExposure&	offset( const std::string& uniformName );
+
+	const std::string&	getExposureUniform() const;
+	FragmentOperation*	getInput() const;
+	const std::string&	getOffsetUniform() const;
+
+	void				setExposureUniform( const std::string& uniformName );
+	FragmentExposure&	setInput( FragmentOperation* op );
+	void				setOffsetUniform( const std::string& uniformName );
+
+	std::string			toString() const;
+protected:
+	void				setUniform( const std::string& uniformName );
+
+	FragmentOperation*	mInput;
+	std::string			mUniformExposure;
+	std::string			mUniformOffset;
 };
 	
 } } }

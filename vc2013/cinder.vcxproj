@@ -261,6 +261,7 @@
     <ClCompile Include="..\src\cinder\gl\BufferTexture.cpp" />
     <ClCompile Include="..\src\cinder\gl\ConstantStrings.cpp" />
     <ClCompile Include="..\src\cinder\gl\Context.cpp" />
+    <ClCompile Include="..\src\cinder\gl\Effect.cpp" />
     <ClCompile Include="..\src\cinder\gl\Environment.cpp" />
     <ClCompile Include="..\src\cinder\gl\EnvironmentCore.cpp" />
     <ClCompile Include="..\src\cinder\gl\EnvironmentEs2.cpp" />
@@ -474,6 +475,7 @@
     <ClInclude Include="..\include\cinder\gl\BufferTexture.h" />
     <ClInclude Include="..\include\cinder\gl\ConstantStrings.h" />
     <ClInclude Include="..\include\cinder\gl\Context.h" />
+    <ClInclude Include="..\include\cinder\gl\Effect.h" />
     <ClInclude Include="..\include\cinder\gl\Environment.h" />
     <ClInclude Include="..\include\cinder\gl\Fbo.h" />
     <ClInclude Include="..\include\cinder\gl\gl.h" />
