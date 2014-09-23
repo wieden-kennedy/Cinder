@@ -43,7 +43,7 @@
 #define CI_GLSL(VERSION,CODE) "#version " #VERSION "\n" #CODE
 
 namespace cinder { namespace gl {
-	
+
 typedef std::shared_ptr<class GlslProg> GlslProgRef;
 
 class GlslProg : public std::enable_shared_from_this<GlslProg> {

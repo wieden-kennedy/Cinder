@@ -17,26 +17,415 @@ mStorage( QualifierStorage_None ), mType( QualifierType_None )
 	
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-Operation::Routine::Routine()
-: mOperatorType( OperatorType_Add ), mRoutine( "" )
+Operation::Kernel::Kernel()
+: mExpressionBody( "" ), mExpressionOutput( "" ), mOperatorType( OperatorType_Add )
 {
+}
+
+Operation::Kernel& Operation::Kernel::bodyExpression( const string& exp )
+{
+	setBodyExpression( exp );
+	return *this;
+}
+
+Operation::Kernel& Operation::Kernel::operatorType( Operation::OperatorType type )
+{
+	setOperatorType( type );
+	return *this;
+}
+
+Operation::Kernel& Operation::Kernel::outputExpression( const string& exp )
+{
+	setOutputExpression( exp );
+	return *this;
+}
+
+
+const string& Operation::Kernel::getBodyExpression() const
+{
+	return mExpressionBody;
+}
+
+Operation::OperatorType Operation::Kernel::getOperatorType() const
+{
+	return mOperatorType;
+}
+
+const string& Operation::Kernel::getOutputExpression() const
+{
+	return mExpressionOutput;
+}
+
+void Operation::Kernel::setBodyExpression( const string& exp )
+{
+	mExpressionBody = exp;
+}
+
+void Operation::Kernel::setOperatorType( Operation::OperatorType type )
+{
+	mOperatorType = type;
+}
+
+void Operation::Kernel::setOutputExpression( const string& exp )
+{
+	mExpressionOutput = exp;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+string Operation::sOutputName = "ciOutput";
+
 Operation::Operation()
+#if !defined( CINDER_GL_ES )
+: mCoreProfile( false ), mVersionMajor( 3 ), mVersionMinor( 2 )
+#endif
 {
-	mRoutines.push_back( Routine() );
+	mKernels.push_back( Kernel() );
+}
+
+Operation::QualifierMap Operation::mergeQualifiers( const Operation::QualifierMap& a, const Operation::QualifierMap& b )
+{
+	QualifierMap merged = a;
+	for ( map<string, Operation::Qualifier>::const_iterator iter = b.begin(); iter != b.end(); ++iter ) {
+		const string& name = iter->first;
+		if ( merged.find( name ) != merged.end() ) {
+			const Qualifier& qa = merged.find( name )->second;
+			const Qualifier& qb = iter->second;
+			if ( qa.mCount != qb.mCount ) {
+				throw Operation::ExcQualifierMergeCountMismatch( "Unable to merge qualifiers. Count mismatch for \"" + name + "\"." );
+#if defined ( CINDER_GL_ES_2 )
+			} else if ( qa.mPrecision != qb.mPrecision ) {
+				throw Operation::ExcQualifierMergePrecisionMismatch( "Unable to merge qualifiers. Precision mismatch for \"" + name + "\"." );
+#endif
+			} else if ( qa.mStorage != qb.mStorage ) {
+				throw Operation::ExcQualifierMergeStorageMismatch( "Unable to merge qualifiers. Storage mismatch for \"" + name + "\"." );
+			} else if ( qa.mType != qb.mType ) {
+				throw Operation::ExcQualifierMergeTypeMismatch( "Unable to merge qualifiers. Type mismatch for \"" + name + "\"." );
+			} else if ( qa.mValue != qb.mValue ) {
+				throw Operation::ExcQualifierMergeValueMismatch( "Unable to merge qualifiers. Value mismatch for \"" + name + "\"." );
+			}
+		} else {
+			merged[ name ] = iter->second;
+		}
+	}
+	return merged;
+}
+
+string Operation::kernelToString( const Operation& op )
+{
+	string output = "";
+	size_t i = 0;
+	for ( vector<Kernel>::const_iterator iter = op.getKernels().begin(); iter != op.getKernels().end(); ++iter, ++i ) {
+		string index	= cinder::toString( i );
+		output			+= "\t";
+#if defined( CINDER_GL_ES_2 )
+		output			+= "highp ";
+#endif
+		output			+= "vec4 " + sOutputName + index + ";\r\n";
+		output			+= "\t{\r\n";
+		output			+= "\t\t" + iter->getBodyExpression();
+		output			+= "\t}\r\n";
+		output			+= "\t" + sOutputName + index + " = " + iter->getOutputExpression() + ";\r\n";
+	}
+	return output;
+}
+
+string Operation::outputToString( const Operation& op )
+{
+	string output = "";
+#if defined( CINDER_GL_ES_2 )
+	output += "highp ";
+#endif
+	output += "vec4( 0.0, 0.0, 0.0, 0.0 )";
+	size_t i = 0;
+	for ( vector<Kernel>::const_iterator iter = op.getKernels().begin(); iter != op.getKernels().end(); ++iter, ++i ) {
+		output += " ";
+		switch ( iter->getOperatorType() ) {
+		case OperatorType_Add:
+			output += "+";
+			break;
+		case OperatorType_Divide:
+			output += "/";
+			break;
+		case OperatorType_Multiply:
+			output += "*";
+			break;
+		case OperatorType_Subtract:
+			output += "-";
+			break;
+		}
+		output += " " + sOutputName + cinder::toString( i );
+	}
+	return output;
+}
+
+string Operation::qualifiersToString( const QualifierMap& qualifiers, bool isFragment )
+{
+	string output = "";
+	for ( map<string, Operation::Qualifier>::const_iterator iter = qualifiers.begin(); iter != qualifiers.end(); ++iter ) {
+		const Qualifier& q	= iter->second;
+		string name			= iter->first;
+		string line			= "";
+		
+		string storage		= "";
+		switch ( q.mStorage ) {
+			case QualifierStorage_Const:
+				storage = "const";
+				break;
+			case QualifierStorage_Input:
+#if defined ( CINDER_GL_ES_2 )
+				if ( isFragment ) {
+					storage = "varying";
+				} else {
+					storage = "attribute";
+				}
+#else
+				storage = "in";
+#endif
+				break;
+			case QualifierStorage_None:
+				break;
+			case QualifierStorage_Output:
+#if defined ( CINDER_GL_ES_2 )
+				storage = "varying";
+#else
+				storage = "out";
+#endif
+				break;
+			case QualifierStorage_Uniform:
+				storage = "uniform";
+				break;
+		}
+		
+#if defined ( CINDER_GL_ES_2 )
+		string precision	= "";
+		switch ( q.mPrecision ) {
+			case QualifierPrecision_High:
+				precision = "highp";
+				break;
+			case QualifierPrecision_Low:
+				precision = "lowp";
+				break;
+			case QualifierPrecision_Medium:
+				precision = "medp";
+				break;
+			case QualifierPrecision_None:
+				break;
+		}
+#endif
+		
+		string type = "";
+		switch ( q.mType ) {
+			case QualifierType_Bool:
+				type = "bool";
+				break;
+			case QualifierType_BVec2:
+				type = "bvec2";
+				break;
+			case QualifierType_BVec3:
+				type = "bvec3";
+				break;
+			case QualifierType_BVec4:
+				type = "bvec4";
+				break;
+			case QualifierType_Float:
+				type = "float";
+				break;
+			case QualifierType_Int:
+				type = "int";
+				break;
+			case QualifierType_IVec2:
+				type = "ive2c";
+				break;
+			case QualifierType_IVec3:
+				type = "ivec3";
+				break;
+			case QualifierType_IVec4:
+				type = "ivec4";
+				break;
+			case QualifierType_Mat2:
+				type = "mat2";
+				break;
+			case QualifierType_Mat3:
+				type = "mat3";
+				break;
+			case QualifierType_Mat4:
+				type = "mat4";
+				break;
+			case QualifierType_None:
+				break;
+			case QualifierType_Sampler2d:
+				type = "sampler2D";
+				break;
+			case QualifierType_SamplerCube:
+				type = "samplerCube";
+				break;
+#if !defined ( CINDER_GL_ES_2 )
+			case QualifierType_Double:
+				type = "double";
+				break;
+			case QualifierType_DVec2:
+				type = "dvec2";
+				break;
+			case QualifierType_DVec3:
+				type = "dvec3";
+				break;
+			case QualifierType_DVec4:
+				type = "dvec4";
+				break;
+			case QualifierType_DMat2:
+				type = "dmat2";
+				break;
+			case QualifierType_DMat2x2:
+				type = "dmat2x2";
+				break;
+			case QualifierType_DMat2x3:
+				type = "dmat2x3";
+				break;
+			case QualifierType_DMat2x4:
+				type = "dmat2x4";
+				break;
+			case QualifierType_DMat3:
+				type = "dmat";
+				break;
+			case QualifierType_DMat3x2:
+				type = "dmat3x2";
+				break;
+			case QualifierType_DMat3x3:
+				type = "dmat3x3";
+				break;
+			case QualifierType_DMat3x4:
+				type = "dmat3x4";
+				break;
+			case QualifierType_DMat4:
+				type = "dmat4";
+				break;
+			case QualifierType_DMat4x2:
+				type = "dmat4x2";
+				break;
+			case QualifierType_DMat4x3:
+				type = "dmat4x3";
+				break;
+			case QualifierType_DMat4x4:
+				type = "dmat4x4";
+				break;
+			case QualifierType_Mat2x2:
+				type = "mat2x2";
+				break;
+			case QualifierType_Mat2x3:
+				type = "mat2x3";
+				break;
+			case QualifierType_Mat2x4:
+				type = "mat2x4";
+				break;
+			case QualifierType_Mat3x2:
+				type = "mat3x2";
+				break;
+			case QualifierType_Mat3x3:
+				type = "mat3x3";
+				break;
+			case QualifierType_Mat3x4:
+				type = "mat3x4";
+				break;
+			case QualifierType_Mat4x2:
+				type = "mat4x2";
+				break;
+			case QualifierType_Mat4x3:
+				type = "mat4x3";
+				break;
+			case QualifierType_Mat4x4:
+				type = "mat4x4";
+				break;
+			case QualifierType_Sampler1d:
+				type = "sampler1D";
+				break;
+			case QualifierType_Sampler2dShadow:
+				type = "sampler2DShadow";
+				break;
+			case QualifierType_Sampler3d:
+				type = "sampler3D";
+				break;
+			case QualifierType_Uint:
+				type = "uint";
+				break;
+			case QualifierType_UVec2:
+				type = "uvec2";
+				break;
+			case QualifierType_UVec3:
+				type = "uvec3";
+				break;
+			case QualifierType_UVec4:
+				type = "uvec4";
+				break;
+#endif
+			case QualifierType_Vec2:
+				type = "vec2";
+				break;
+			case QualifierType_Vec3:
+				type = "vec3";
+				break;
+			case QualifierType_Vec4:
+				type = "vec4";
+				break;
+		}
+		
+		if ( !storage.empty() ) {
+			line = storage + " ";
+		}
+#if defined ( CINDER_GL_ES_2 )
+		if ( !precision.empty() ) {
+			line += precision + " ";
+		}
+#endif
+		if ( !type.empty() ) {
+			line += type + " ";
+		}
+		line += name;
+		
+		if ( q.mCount > 1 ) {
+			line += "[ " + cinder::toString( q.mCount ) + " ]";
+		}
+		if ( !q.mValue.empty() ) {
+			line += " = " + q.mValue;
+		}
+		
+		line	+= ";\r\n";
+		output	+= line;
+	}
+	
+	return output;
+}
+
+string Operation::versionToString( const Operation& op )
+{
+	string output	= "#version ";
+#if defined( CINDER_GL_ES_2 )
+	string version	= "100 es";
+#elif defined( CINDER_GL_ES_3 )
+	string version	= "300 es";
+#else
+	uint32_t major	= op.getMajorVersion();
+	uint32_t minor	= op.getMinorVersion();
+	string version	= cinder::toString( major ) + cinder::toString( minor ) + "0";
+	if ( major == 3 && minor == 2 ) {
+		version		= "150";
+	}
+	if ( op.getCoreProfile() ) {
+		output		+= " core";
+	}
+#endif
+	output			+= "\r\n";
+	return output;
 }
 
 void Operation::merge( const Operation& rhs, OperatorType type )
 {
-	if ( !rhs.mRoutines.empty() ) {
-		mergeQualifiers( rhs.mQualifiers );
-		for ( vector<Operation::Routine>::const_iterator iter = rhs.mRoutines.begin(); iter != rhs.mRoutines.end(); ++iter ) {
-			mRoutines.push_back( *iter );
-			if ( iter == rhs.mRoutines.begin() ) {
-				mRoutines.back().mOperatorType = type;
+	if ( !rhs.mKernels.empty() ) {
+		mQualifiers = mergeQualifiers( mQualifiers, rhs.mQualifiers );
+		for ( vector<Operation::Kernel>::const_iterator iter = rhs.mKernels.begin(); iter != rhs.mKernels.end(); ++iter ) {
+			mKernels.push_back( *iter );
+			if ( iter == rhs.mKernels.begin() ) {
+				mKernels.back().setOperatorType( type );
 			}
 		}
 	}
@@ -89,285 +478,53 @@ void Operation::operator/=( const Operation& rhs )
 {
 	merge( rhs, OperatorType_Divide );
 }
-	
-void Operation::mergeQualifiers( const map<string, Operation::Qualifier>& q )
+
+#if !defined( CINDER_GL_ES )
+Operation& Operation::coreProfile( bool enable )
 {
-	for ( map<string, Operation::Qualifier>::const_iterator iter = q.begin(); iter != q.end(); ++iter ) {
-		const string& name = iter->first;
-		if ( mQualifiers.find( name ) != mQualifiers.end() ) {
-			const Qualifier& a = mQualifiers.find( name )->second;
-			const Qualifier& b = iter->second;
-			if ( a.mCount != b.mCount ) {
-				throw Operation::ExcQualifierMergeCountMismatch( "Unable to merge qualifiers. Count mismatch for \"" + name + "\"." );
-#if defined ( CINDER_GL_ES_2 )
-			} else if ( a.mPrecision != b.mPrecision ) {
-				throw Operation::ExcQualifierMergePrecisionMismatch( "Unable to merge qualifiers. Precision mismatch for \"" + name + "\"." );
-#endif
-			} else if ( a.mStorage != b.mStorage ) {
-				throw Operation::ExcQualifierMergeStorageMismatch( "Unable to merge qualifiers. Storage mismatch for \"" + name + "\"." );
-			} else if ( a.mType != b.mType ) {
-				throw Operation::ExcQualifierMergeTypeMismatch( "Unable to merge qualifiers. Type mismatch for \"" + name + "\"." );
-			} else if ( a.mValue != b.mValue ) {
-				throw Operation::ExcQualifierMergeValueMismatch( "Unable to merge qualifiers. Value mismatch for \"" + name + "\"." );
-			}
-		} else {
-			mQualifiers[ name ] = iter->second;
-		}
-	}
+	setCoreProfile( enable );
+	return *this;
 }
 
-string Operation::qualifiersToString() const
+Operation& Operation::version( uint32_t major, uint32_t minor )
 {
-	string output = "";
-	for ( map<string, Operation::Qualifier>::const_iterator iter = mQualifiers.begin(); iter != mQualifiers.end(); ++iter ) {
-		const Qualifier& q	= iter->second;
-		string name			= iter->first;
-		string line			= "";
-		
-		string storage		= "";
-		switch ( q.mStorage ) {
-			case QualifierStorage_Const:
-				storage = "const";
-				break;
-			case QualifierStorage_Input:
-#if defined ( CINDER_GL_ES_2 )
-				// TODO make this "varying" for fragment shaders
-				storage = "attribute";
-#else
-				storage = "in";
-#endif
-				break;
-			case QualifierStorage_None:
-				break;
-			case QualifierStorage_Output:
-#if defined ( CINDER_GL_ES_2 )
-				storage = "varying";
-#else
-				storage = "out";
-#endif
-				break;
-			case QualifierStorage_Uniform:
-				storage = "uniform";
-				break;
-		}
-		
-#if defined ( CINDER_GL_ES_2 )
-		string precision	= "";
-		switch ( q.mPrecision ) {
-			case QualifierPrecision_High:
-				precision = "highp";
-				break;
-			case QualifierPrecision_Low:
-				precision = "lowp";
-				break;
-			case QualifierPrecision_Medium:
-				precision = "medp";
-				break;
-			case QualifierPrecision_None:
-				break;
-		}
-#endif
-		
-		string type = "";
-		switch ( q.mType ) {
-			case QualifierType_Bool:
-				type = "bool";
-				break;
-			case QualifierType_BVec2:
-				type = "bvec2";
-				break;
-			case QualifierType_BVec3:
-				type = "bvec3";
-				break;
-			case QualifierType_BVec4:
-				type = "bvec4";
-				break;
-#if !defined ( CINDER_GL_ES_2 )
-			case QualifierType_Double:
-				type = "double";
-				break;
-			case QualifierType_DVec2:
-				type = "dvec2";
-				break;
-			case QualifierType_DVec3:
-				type = "dvec3";
-				break;
-			case QualifierType_DVec4:
-				type = "dvec4";
-				break;
-			case QualifierType_DMat2:
-				type = "dmat2";
-				break;
-			case QualifierType_DMat2x2:
-				type = "dmat2x2";
-				break;
-			case QualifierType_DMat2x3:
-				type = "dmat2x3";
-				break;
-			case QualifierType_DMat2x4:
-				type = "dmat2x4";
-				break;
-			case QualifierType_DMat3:
-				type = "dmat";
-				break;
-			case QualifierType_DMat3x2:
-				type = "dmat3x2";
-				break;
-			case QualifierType_DMat3x3:
-				type = "dmat3x3";
-				break;
-			case QualifierType_DMat3x4:
-				type = "dmat3x4";
-				break;
-			case QualifierType_DMat4:
-				type = "dmat4";
-				break;
-			case QualifierType_DMat4x2:
-				type = "dmat4x2";
-				break;
-			case QualifierType_DMat4x3:
-				type = "dmat4x3";
-				break;
-			case QualifierType_DMat4x4:
-				type = "dmat4x4";
-				break;
-#endif
-			case QualifierType_Float:
-				type = "float";
-				break;
-			case QualifierType_Int:
-				type = "int";
-				break;
-			case QualifierType_IVec2:
-				type = "ive2c";
-				break;
-			case QualifierType_IVec3:
-				type = "ivec3";
-				break;
-			case QualifierType_IVec4:
-				type = "ivec4";
-				break;
-			case QualifierType_Mat2:
-				type = "mat2";
-				break;
-#if !defined ( CINDER_GL_ES_2 )
-			case QualifierType_Mat2x2:
-				type = "mat2x2";
-				break;
-			case QualifierType_Mat2x3:
-				type = "mat2x3";
-				break;
-			case QualifierType_Mat2x4:
-				type = "mat2x4";
-				break;
-#endif
-			case QualifierType_Mat3:
-				type = "mat3";
-				break;
-#if !defined ( CINDER_GL_ES_2 )
-			case QualifierType_Mat3x2:
-				type = "mat3x2";
-				break;
-			case QualifierType_Mat3x3:
-				type = "mat3x3";
-				break;
-			case QualifierType_Mat3x4:
-				type = "mat3x4";
-				break;
-#endif
-			case QualifierType_Mat4:
-				type = "mat4";
-				break;
-#if !defined ( CINDER_GL_ES_2 )
-			case QualifierType_Mat4x2:
-				type = "mat4x2";
-				break;
-			case QualifierType_Mat4x3:
-				type = "mat4x3";
-				break;
-			case QualifierType_Mat4x4:
-				type = "mat4x4";
-				break;
-#endif
-			case QualifierType_None:
-				break;
-#if !defined ( CINDER_GL_ES_2 )
-			case QualifierType_Sampler1d:
-				type = "sampler1D";
-				break;
-#endif
-			case QualifierType_Sampler2d:
-				type = "sampler2D";
-				break;
-#if !defined ( CINDER_GL_ES_2 )
-			case QualifierType_Sampler2dShadow:
-				type = "sampler2DShadow";
-				break;
-			case QualifierType_Sampler3d:
-				type = "sampler3D";
-				break;
-#endif
-			case QualifierType_SamplerCube:
-				type = "samplerCube";
-				break;
-#if !defined ( CINDER_GL_ES_2 )
-			case QualifierType_Uint:
-				type = "uint";
-				break;
-			case QualifierType_UVec2:
-				type = "uvec2";
-				break;
-			case QualifierType_UVec3:
-				type = "uvec3";
-				break;
-			case QualifierType_UVec4:
-				type = "uvec4";
-				break;
-#endif
-			case QualifierType_Vec2:
-				type = "vec2";
-				break;
-			case QualifierType_Vec3:
-				type = "vec3";
-				break;
-			case QualifierType_Vec4:
-				type = "vec4";
-				break;
-		}
-		
-		if ( !storage.empty() ) {
-			line = storage + " ";
-		}
-#if defined ( CINDER_GL_ES_2 )
-		if ( !precision.empty() ) {
-			line += precision + " ";
-		}
-#endif
-		if ( !type.empty() ) {
-			line += type + " ";
-		}
-		line += name;
-		
-		if ( q.mCount > 1 ) {
-			line += "[ " + cinder::toString( q.mCount ) + " ]";
-		}
-		if ( !q.mValue.empty() ) {
-			line += " = " + q.mValue;
-		}
-		
-		line	+= ";\r\n";
-		output	+= line;
-	}
-	
-	return output;
+	setVersion( major, minor );
+	return *this;
 }
+
+bool Operation::getCoreProfile() const
+{
+	return mCoreProfile;
+}
+
+uint32_t Operation::getMajorVersion() const
+{
+	return mVersionMajor;
+}
+
+uint32_t Operation::getMinorVersion() const
+{
+	return mVersionMinor;
+}
+
+void Operation::setCoreProfile( bool enable )
+{
+	mCoreProfile = enable;
+}
+
+void Operation::setVersion( uint32_t major, uint32_t minor )
+{
+	mVersionMajor = major;
+	mVersionMinor = minor;
+}
+#endif
 
 string Operation::toString() const
 {
-	string output	= qualifiersToString();
-	output			+= "\r\nvoid main( void )\r\n{\r\n";
-
-	output			+= "}\r";
+	string output;
+	output = Operation::versionToString( *this );
+	output += "\r\nvoid main( void )\r\n{\r\n";
+	output += "}\r";
 	return output;
 }
 	
@@ -376,6 +533,11 @@ string Operation::toString() const
 Operation::Exception::Exception( const string& msg ) throw()
 {
 	sprintf( mMessage, "%s", msg.c_str() );
+}
+
+Operation::ExcInvalidGlVersion::ExcInvalidGlVersion( const string& msg ) throw()
+: Operation::Exception( msg )
+{
 }
 
 Operation::ExcQualifierMergeCountMismatch::ExcQualifierMergeCountMismatch( const string& msg ) throw()
@@ -405,6 +567,12 @@ Operation::ExcQualifierMergeValueMismatch::ExcQualifierMergeValueMismatch( const
 {
 }
 
+ostream& operator<<( ostream& out, const Operation& op )
+{
+	out << op.toString();
+	return out;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 	
 FragmentOperation::FragmentOperation()
@@ -414,52 +582,17 @@ FragmentOperation::FragmentOperation()
 
 string FragmentOperation::toString() const
 {
-	string output = qualifiersToString();
+	string output;
+	output = Operation::versionToString( *this );
+	output += Operation::qualifiersToString( mQualifiers, false );
 #if !defined( CINDER_GL_ES_2 )
 	output += "out vec4 gl_FragColor;\r\n";
 #endif
 	output += "\r\nvoid main( void ) {\r\n";
-	
-	string resultName = "ciResult";
-	size_t i = 0;
-	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
-		string index	= cinder::toString( i );
-		string block	= "\t";
-#if defined( CINDER_GL_ES_2 )
-		block			+= "highp ";
-#endif
-		block			+= "vec4 " + resultName + index + ";\r\n";
-		block			+= "\t{\r\n";
-		block			+= "\t\t" + iter->mRoutine;
-		block			+= "\t}\r\n";
-		block			+= "\t" + resultName + index + " = " + iter->mResult + ";\r\n";
-	}
-
+	output += kernelToString( *this );
+	output += "\r\n";
 	output += "\tgl_FragColor = ";
-#if defined( CINDER_GL_ES_2 )
-	output += "highp ";
-#endif
-	output += "vec4( 0.0, 0.0, 0.0, 0.0 )";
-	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
-		output += " ";
-		switch ( iter->mOperatorType ) {
-		case OperatorType_Add:
-			output += "+";
-			break;
-		case OperatorType_Divide:
-			output += "/";
-			break;
-		case OperatorType_Multiply:
-			output += "*";
-			break;
-		case OperatorType_Subtract:
-			output += "-";
-			break;
-		}
-		string index	= cinder::toString( i );
-		output			+= " " + resultName + index;
-	}
-
+	output += outputToString( *this );
 	output += ";\r\n";
 	output += "}\r";
 	return output;
@@ -472,49 +605,14 @@ VertexOperation::VertexOperation()
 
 string VertexOperation::toString() const
 {
-	string output	= qualifiersToString();
-	output			+= "\r\nvoid main( void ) {\r\n";
-	
-	string resultName = "ciResult";
-	size_t i = 0;
-	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
-		string index	= cinder::toString( i );
-		string block	= "\t";
-#if defined( CINDER_GL_ES_2 )
-		block			+= "highp ";
-#endif
-		block			+= "vec4 " + resultName + index + ";\r\n";
-		block			+= "\t{\r\n";
-		block			+= "\t\t" + iter->mRoutine;
-		block			+= "\t}\r\n";
-		block			+= "\t" + resultName + index + " = " + iter->mResult + ";\r\n";
-	}
-
+	string output;
+	output = Operation::versionToString( *this );
+	output += Operation::qualifiersToString( mQualifiers, false );
+	output += "\r\nvoid main( void ) {\r\n";
+	output += kernelToString( *this );
+	output += "\r\n";
 	output += "\tgl_Position = ";
-#if defined( CINDER_GL_ES_2 )
-	output += "highp ";
-#endif
-	output += "vec4( 0.0, 0.0, 0.0, 0.0 )";
-	for ( vector<Routine>::const_iterator iter = mRoutines.begin(); iter != mRoutines.end(); ++iter ) {
-		output += " ";
-		switch ( iter->mOperatorType ) {
-		case OperatorType_Add:
-			output += "+";
-			break;
-		case OperatorType_Divide:
-			output += "/";
-			break;
-		case OperatorType_Multiply:
-			output += "*";
-			break;
-		case OperatorType_Subtract:
-			output += "-";
-			break;
-		}
-		string index	= cinder::toString( i );
-		output			+= " " + resultName + index;
-	}
-
+	output += outputToString( *this );
 	output += ";\r\n";
 	output += "}\r";
 	return output;
@@ -542,8 +640,8 @@ VertexPassThrough::VertexPassThrough()
 	mQualifiers[ "vTexCoord0" ]				= o4;
 	mQualifiers[ "ciModelViewProjection" ]	= u4x4;
 	
-	mRoutines.front().mRoutine	= "vTexCoord0 = ciTexCoord0;";
-	mRoutines.front().mResult	= "ciModelViewProjection * ciPosition;";
+	mKernels.front().bodyExpression( "vTexCoord0 = ciTexCoord0;" )
+		.outputExpression( "ciModelViewProjection * ciPosition" );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -562,8 +660,8 @@ FragmentTexture::FragmentTexture()
 	mQualifiers[ "vTexCoord0" ] = i4;
 	mQualifiers[ "uTexture" ]	= uSampler2d;
 	
-	mRoutines.front().mRoutine	= "vec4 color = texture( uTexture, vTexCoord0.st );";
-	mRoutines.front().mResult	= "color;";
+	mKernels.front().bodyExpression( "vec4 color = texture( uTexture, vTexCoord0.st );" )
+		.outputExpression( "color" );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -630,7 +728,7 @@ void FragmentExposure::setOffsetUniform( const string& uniformName )
 	setUniform( uniformName );
 }
 
-void FragmentExposure::setUniform( const std::string& uniformName )
+void FragmentExposure::setUniform( const string& uniformName )
 {
 	Qualifier uf;
 	uf.mStorage	= QualifierStorage_Uniform;
@@ -641,15 +739,14 @@ void FragmentExposure::setUniform( const std::string& uniformName )
 
 string FragmentExposure::toString() const
 {
-	FragmentOperation op = *this;
-	op.mergeQualifiers( mInput->mQualifiers );
-
+	QualifierMap q	= mergeQualifiers( mQualifiers, mInput->getQualifiers() );
+	string output	= Operation::versionToString( *this );
+	output			+= Operation::qualifiersToString( q, true );
+	
 	// TODO 
 	// write input operation's result to local var
 	// use result as input for exposure
 	
-	string output = op.qualifiersToString();
-
 	return "";
 }
 

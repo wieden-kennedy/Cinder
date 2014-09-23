@@ -2,6 +2,7 @@
 
 #include "cinder/Exception.h"
 #include <map>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -9,7 +10,7 @@ namespace cinder { namespace gl { namespace effect {
 
 class Operation
 {
-public:
+protected:
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -37,36 +38,24 @@ public:
 		QualifierType_None,
 		QualifierType_Bool,
 		QualifierType_BVec2, QualifierType_BVec3, QualifierType_BVec4,
+		QualifierType_Float,
+		QualifierType_Int,
+		QualifierType_IVec2, QualifierType_IVec3, QualifierType_IVec4,
+		QualifierType_Mat2,
+		QualifierType_Mat3,
+		QualifierType_Mat4,
+		QualifierType_Sampler2d,
+		QualifierType_SamplerCube,
 #if !defined ( CINDER_GL_ES_2 )
 		QualifierType_Double,
 		QualifierType_DVec2, QualifierType_DVec3, QualifierType_DVec4,
 		QualifierType_DMat2, QualifierType_DMat2x2, QualifierType_DMat2x3, QualifierType_DMat2x4,
 		QualifierType_DMat3, QualifierType_DMat3x2, QualifierType_DMat3x3, QualifierType_DMat3x4,
 		QualifierType_DMat4, QualifierType_DMat4x2, QualifierType_DMat4x3, QualifierType_DMat4x4,
-#endif
-		QualifierType_Float,
-		QualifierType_Int,
-		QualifierType_IVec2, QualifierType_IVec3, QualifierType_IVec4,
-		QualifierType_Mat2,
-#if !defined ( CINDER_GL_ES_2 )
 		QualifierType_Mat2x2, QualifierType_Mat2x3, QualifierType_Mat2x4,
-#endif
-		QualifierType_Mat3,
-#if !defined ( CINDER_GL_ES_2 )
 		QualifierType_Mat3x2, QualifierType_Mat3x3, QualifierType_Mat3x4,
-#endif
-		QualifierType_Mat4,
-#if !defined ( CINDER_GL_ES_2 )
 		QualifierType_Mat4x2, QualifierType_Mat4x3, QualifierType_Mat4x4,
-		QualifierType_Sampler1d,
-#endif
-		QualifierType_Sampler2d,
-#if !defined ( CINDER_GL_ES_2 )
-		QualifierType_Sampler2dShadow,
-		QualifierType_Sampler3d,
-#endif
-		QualifierType_SamplerCube,
-#if !defined ( CINDER_GL_ES_2 )
+		QualifierType_Sampler1d, QualifierType_Sampler2dShadow, QualifierType_Sampler3d,
 		QualifierType_Uint,
 		QualifierType_UVec2, QualifierType_UVec3, QualifierType_UVec4,
 #endif
@@ -78,18 +67,19 @@ public:
 	public:
 		Qualifier();
 
-		size_t							mCount;
+		size_t					mCount;
 #if defined ( CINDER_GL_ES_2 )
-		QualifierPrecision				mPrecision;
+		QualifierPrecision		mPrecision;
 #endif
-		QualifierStorage				mStorage;
-		QualifierType					mType;
-		std::string						mValue;
+		QualifierStorage		mStorage;
+		QualifierType			mType;
+		std::string				mValue;
 	};
-	
+
+	typedef std::map<std::string, Operation::Qualifier> QualifierMap;
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//protected:
 	enum : size_t
 	{
 		OperatorType_Add,
@@ -98,46 +88,86 @@ public:
 		OperatorType_Subtract,
 	} typedef OperatorType;
 	
-	class Routine
+	class Kernel
 	{
 	public:
-		Routine();
-		
-		OperatorType					mOperatorType;
-		std::string						mResult;
-		std::string						mRoutine;
+		Kernel();
+
+		Kernel&					bodyExpression( const std::string& exp );
+		Kernel&					operatorType( OperatorType type );
+		Kernel&					outputExpression( const std::string& exp );
+
+		const std::string&		getBodyExpression() const;
+		OperatorType			getOperatorType() const;
+		const std::string&		getOutputExpression() const;
+
+		void					setBodyExpression( const std::string& exp );
+		void					setOperatorType( OperatorType type );
+		void					setOutputExpression( const std::string& exp );
+	protected:
+		std::string				mExpressionBody;
+		std::string				mExpressionOutput;
+		OperatorType			mOperatorType;
 	};
 	
-	std::map<std::string, Qualifier>	mQualifiers;
-	std::vector<Routine>				mRoutines;
+	static std::string			sOutputName;
+
+	static QualifierMap			mergeQualifiers( const QualifierMap& a, const QualifierMap& b );
+
+	static std::string			kernelToString( const Operation& op );
+	static std::string			outputToString( const Operation& op );
+	static std::string			qualifiersToString( const QualifierMap& qualifers, bool isFragment );
+	static std::string			versionToString( const Operation& op );
+
+	void						merge( const Operation& rhs, OperatorType type );
 	
-	void								merge( const Operation& rhs, OperatorType type );
-	void								mergeQualifiers( const std::map<std::string, Qualifier>& q );
-	std::string							qualifiersToString() const;
+#if !defined( CINDER_GL_ES )
+	bool						mCoreProfile;
+	uint32_t					mVersionMajor;
+	uint32_t					mVersionMinor;
+#endif
+
+	QualifierMap				mQualifiers;
+	std::vector<Kernel>			mKernels;
 public:
 	Operation();
 	
-	Operation							operator+( const Operation& rhs );
-	Operation 							operator*( const Operation& rhs );
-	Operation 							operator-( const Operation& rhs );
-	Operation 							operator/( const Operation& rhs );
+	Operation					operator+( const Operation& rhs );
+	Operation 					operator*( const Operation& rhs );
+	Operation 					operator-( const Operation& rhs );
+	Operation 					operator/( const Operation& rhs );
 	
-	void								operator+=( const Operation& rhs );
-	void								operator*=( const Operation& rhs );
-	void								operator-=( const Operation& rhs );
-	void								operator/=( const Operation& rhs );
+	void						operator+=( const Operation& rhs );
+	void						operator*=( const Operation& rhs );
+	void						operator-=( const Operation& rhs );
+	void						operator/=( const Operation& rhs );
 
 	// TODO dot, cross, etc
 	
-	virtual std::string					toString() const;
-	
+#if !defined( CINDER_GL_ES )
+	Operation&					coreProfile( bool enable = true );
+	Operation&					version( uint32_t major, uint32_t minor );
+
+	bool						getCoreProfile() const;
+	uint32_t					getMajorVersion() const;
+	uint32_t					getMinorVersion() const;
+
+	void						setCoreProfile( bool enable );
+	void						setVersion( uint32_t major, uint32_t minor );
+#endif
+
+	const std::vector<Kernel>&	getKernels() const;
+	const QualifierMap&			getQualifiers() const;
+
+	virtual std::string			toString() const;
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	class Exception : public cinder::Exception
 	{
 	public:
 		Exception( const std::string& msg ) throw();
-		virtual const char* what() const throw()
+		virtual const char*		what() const throw()
 		{
 			return mMessage;
 		}
@@ -145,6 +175,12 @@ public:
 		char mMessage[ 2048 ];
 	};
 	
+	class ExcInvalidGlVersion : public Exception
+	{
+	public:
+		ExcInvalidGlVersion( const std::string& msg ) throw();
+	};
+
 	class ExcQualifierMergeCountMismatch : public Exception
 	{
 	public:
@@ -178,22 +214,24 @@ public:
 	};
 };
 
+std::ostream& operator<<( std::ostream& out, const Operation& op );
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-class FragmentOperation : public Operation
-{
-public:
-	FragmentOperation();
-
-	virtual std::string	toString() const;
-};
 
 class VertexOperation : public Operation
 {
 public:
 	VertexOperation();
 
-	virtual std::string	toString() const;
+	virtual std::string			toString() const;
+};
+
+class FragmentOperation : public Operation
+{
+public:
+	FragmentOperation();
+
+	virtual std::string			toString() const;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -217,26 +255,26 @@ class FragmentExposure : public FragmentOperation
 public:
 	FragmentExposure( FragmentOperation* op = nullptr );
 
-	FragmentExposure&	exposure( const std::string& uniformName );
-	FragmentExposure&	input( FragmentOperation* op );
-	FragmentExposure&	offset( const std::string& uniformName );
+	FragmentExposure&			exposure( const std::string& uniformName );
+	FragmentExposure&			input( FragmentOperation* op );
+	FragmentExposure&			offset( const std::string& uniformName );
 
-	const std::string&	getExposureUniform() const;
-	FragmentOperation*	getInput() const;
-	const std::string&	getOffsetUniform() const;
+	const std::string&			getExposureUniform() const;
+	FragmentOperation*			getInput() const;
+	const std::string&			getOffsetUniform() const;
 
-	void				setExposureUniform( const std::string& uniformName );
-	void				setInput( FragmentOperation* op );
-	void				setOffsetUniform( const std::string& uniformName );
+	void						setExposureUniform( const std::string& uniformName );
+	void						setInput( FragmentOperation* op );
+	void						setOffsetUniform( const std::string& uniformName );
 
-	std::string			toString() const;
+	std::string					toString() const;
 protected:
-	void				setUniform( const std::string& uniformName );
+	void						setUniform( const std::string& uniformName );
 
-	FragmentOperation*	mInput;
-	std::string			mUniformExposure;
-	std::string			mUniformOffset;
+	FragmentOperation*			mInput;
+	std::string					mUniformExposure;
+	std::string					mUniformOffset;
 };
-	
+
 } } }
  
