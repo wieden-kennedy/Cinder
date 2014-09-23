@@ -616,7 +616,7 @@ void FragmentExposure::setExposureUniform( const string& uniformName )
 	setUniform( uniformName );
 }
 
-FragmentExposure& FragmentExposure::setInput( FragmentOperation* op )
+void FragmentExposure::setInput( FragmentOperation* op )
 {
 	mInput = op;
 }

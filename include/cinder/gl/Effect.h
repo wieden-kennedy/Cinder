@@ -226,7 +226,7 @@ public:
 	const std::string&	getOffsetUniform() const;
 
 	void				setExposureUniform( const std::string& uniformName );
-	FragmentExposure&	setInput( FragmentOperation* op );
+	void				setInput( FragmentOperation* op );
 	void				setOffsetUniform( const std::string& uniformName );
 
 	std::string			toString() const;
