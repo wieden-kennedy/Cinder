@@ -110,6 +110,8 @@ protected:
 		OperatorType			mOperatorType;
 	};
 	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
 	static std::string			sOutputName;
 
 	static QualifierMap			mergeQualifiers( const QualifierMap& a, const QualifierMap& b );

@@ -739,15 +739,25 @@ void FragmentExposure::setUniform( const string& uniformName )
 
 string FragmentExposure::toString() const
 {
-	QualifierMap q	= mergeQualifiers( mQualifiers, mInput->getQualifiers() );
-	string output	= Operation::versionToString( *this ) + "\r\n";
-	output			+= Operation::qualifiersToString( q, true ) + "\r\n";
-	
-	// TODO 
-	// write input operation's result to local var
-	// use result as input for exposure
-	
-	return "";
+	QualifierMap q		= mergeQualifiers( mQualifiers, mInput->getQualifiers() );
+	string inputKernel	= Operation::kernelToString( *mInput );
+	string inputOutput	= Operation::outputToString( *mInput );
+	string exposureName	= sOutputName + "Exposure";
+
+	string output;
+	output = Operation::versionToString( *this ) + "\r\n";
+	output += Operation::qualifiersToString( q, true ) + "\r\n";
+	output += "\r\nvoid main( void ) {\r\n";
+	output += inputKernel + "\r\n";
+	output += "\t";
+#if defined( CINDER_GL_ES_2 )
+	output += "highp ";
+#endif
+	output += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
+	output += exposureName + " = pow( " + exposureName +  ", " + mUniformExposure + " + " + mUniformOffset + " );\r\n";
+	output += "\tgl_FragColor = " + exposureName + ";\r\n";
+	output += "}\r";
+	return output;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
