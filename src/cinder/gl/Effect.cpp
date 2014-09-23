@@ -132,6 +132,7 @@ string Operation::qualifiersToString() const
 				break;
 			case QualifierStorage_Input:
 #if defined ( CINDER_GL_ES_2 )
+				// TODO make this "varying" for fragment shaders
 				storage = "attribute";
 #else
 				storage = "in";
@@ -183,6 +184,7 @@ string Operation::qualifiersToString() const
 			case QualifierType_BVec4:
 				type = "bvec4";
 				break;
+#if !defined ( CINDER_GL_ES_2 )
 			case QualifierType_Double:
 				type = "double";
 				break;
@@ -231,6 +233,7 @@ string Operation::qualifiersToString() const
 			case QualifierType_DMat4x4:
 				type = "dmat4x4";
 				break;
+#endif
 			case QualifierType_Float:
 				type = "float";
 				break;
@@ -249,6 +252,7 @@ string Operation::qualifiersToString() const
 			case QualifierType_Mat2:
 				type = "mat2";
 				break;
+#if !defined ( CINDER_GL_ES_2 )
 			case QualifierType_Mat2x2:
 				type = "mat2x2";
 				break;
@@ -258,9 +262,11 @@ string Operation::qualifiersToString() const
 			case QualifierType_Mat2x4:
 				type = "mat2x4";
 				break;
+#endif
 			case QualifierType_Mat3:
 				type = "mat3";
 				break;
+#if !defined ( CINDER_GL_ES_2 )
 			case QualifierType_Mat3x2:
 				type = "mat3x2";
 				break;
@@ -270,9 +276,11 @@ string Operation::qualifiersToString() const
 			case QualifierType_Mat3x4:
 				type = "mat3x4";
 				break;
+#endif
 			case QualifierType_Mat4:
 				type = "mat4";
 				break;
+#if !defined ( CINDER_GL_ES_2 )
 			case QualifierType_Mat4x2:
 				type = "mat4x2";
 				break;
@@ -282,23 +290,29 @@ string Operation::qualifiersToString() const
 			case QualifierType_Mat4x4:
 				type = "mat4x4";
 				break;
+#endif
 			case QualifierType_None:
 				break;
+#if !defined ( CINDER_GL_ES_2 )
 			case QualifierType_Sampler1d:
 				type = "sampler1D";
 				break;
+#endif
 			case QualifierType_Sampler2d:
 				type = "sampler2D";
 				break;
+#if !defined ( CINDER_GL_ES_2 )
 			case QualifierType_Sampler2dShadow:
 				type = "sampler2DShadow";
 				break;
 			case QualifierType_Sampler3d:
 				type = "sampler3D";
 				break;
+#endif
 			case QualifierType_SamplerCube:
 				type = "samplerCube";
 				break;
+#if !defined ( CINDER_GL_ES_2 )
 			case QualifierType_Uint:
 				type = "uint";
 				break;
@@ -311,6 +325,7 @@ string Operation::qualifiersToString() const
 			case QualifierType_UVec4:
 				type = "uvec4";
 				break;
+#endif
 			case QualifierType_Vec2:
 				type = "vec2";
 				break;

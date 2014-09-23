@@ -37,21 +37,39 @@ public:
 		QualifierType_None,
 		QualifierType_Bool,
 		QualifierType_BVec2, QualifierType_BVec3, QualifierType_BVec4,
+#if !defined ( CINDER_GL_ES_2 )
 		QualifierType_Double,
 		QualifierType_DVec2, QualifierType_DVec3, QualifierType_DVec4,
 		QualifierType_DMat2, QualifierType_DMat2x2, QualifierType_DMat2x3, QualifierType_DMat2x4,
 		QualifierType_DMat3, QualifierType_DMat3x2, QualifierType_DMat3x3, QualifierType_DMat3x4,
 		QualifierType_DMat4, QualifierType_DMat4x2, QualifierType_DMat4x3, QualifierType_DMat4x4,
+#endif
 		QualifierType_Float,
 		QualifierType_Int,
 		QualifierType_IVec2, QualifierType_IVec3, QualifierType_IVec4,
-		QualifierType_Mat2, QualifierType_Mat2x2, QualifierType_Mat2x3, QualifierType_Mat2x4,
-		QualifierType_Mat3, QualifierType_Mat3x2, QualifierType_Mat3x3, QualifierType_Mat3x4,
-		QualifierType_Mat4, QualifierType_Mat4x2, QualifierType_Mat4x3, QualifierType_Mat4x4,
-		QualifierType_Sampler1d, QualifierType_Sampler2d, QualifierType_Sampler2dShadow,
-		QualifierType_Sampler3d, QualifierType_SamplerCube,
+		QualifierType_Mat2,
+#if !defined ( CINDER_GL_ES_2 )
+		QualifierType_Mat2x2, QualifierType_Mat2x3, QualifierType_Mat2x4,
+#endif
+		QualifierType_Mat3,
+#if !defined ( CINDER_GL_ES_2 )
+		QualifierType_Mat3x2, QualifierType_Mat3x3, QualifierType_Mat3x4,
+#endif
+		QualifierType_Mat4,
+#if !defined ( CINDER_GL_ES_2 )
+		QualifierType_Mat4x2, QualifierType_Mat4x3, QualifierType_Mat4x4,
+		QualifierType_Sampler1d,
+#endif
+		QualifierType_Sampler2d,
+#if !defined ( CINDER_GL_ES_2 )
+		QualifierType_Sampler2dShadow,
+		QualifierType_Sampler3d,
+#endif
+		QualifierType_SamplerCube,
+#if !defined ( CINDER_GL_ES_2 )
 		QualifierType_Uint,
 		QualifierType_UVec2, QualifierType_UVec3, QualifierType_UVec4,
+#endif
 		QualifierType_Vec2, QualifierType_Vec3, QualifierType_Vec4
 	} typedef QualifierType;
 
