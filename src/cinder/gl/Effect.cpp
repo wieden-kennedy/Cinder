@@ -17,7 +17,6 @@ mStorage( QualifierStorage_None ), mType( QualifierType_None )
 	
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-	
 Operation::Routine::Routine()
 : mOperatorType( OperatorType_Add ), mRoutine( "" )
 {
