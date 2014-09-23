@@ -535,11 +535,6 @@ Operation::Exception::Exception( const string& msg ) throw()
 	sprintf( mMessage, "%s", msg.c_str() );
 }
 
-Operation::ExcInvalidGlVersion::ExcInvalidGlVersion( const string& msg ) throw()
-: Operation::Exception( msg )
-{
-}
-
 Operation::ExcQualifierMergeCountMismatch::ExcQualifierMergeCountMismatch( const string& msg ) throw()
 : Operation::Exception( msg )
 {

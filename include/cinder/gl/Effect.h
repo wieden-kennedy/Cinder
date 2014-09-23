@@ -176,12 +176,6 @@ public:
 	private:
 		char mMessage[ 2048 ];
 	};
-	
-	class ExcInvalidGlVersion : public Exception
-	{
-	public:
-		ExcInvalidGlVersion( const std::string& msg ) throw();
-	};
 
 	class ExcQualifierMergeCountMismatch : public Exception
 	{
