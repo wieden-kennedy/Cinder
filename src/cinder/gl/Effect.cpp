@@ -8,7 +8,7 @@ using namespace std;
 	
 Operation::Qualifier::Qualifier()
 : mCount( 1 ),
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 mPrecision( QualifierPrecision_High ),
 #endif
 mStorage( QualifierStorage_None ), mType( QualifierType_None )
@@ -93,7 +93,7 @@ Operation::QualifierMap Operation::mergeQualifiers( const Operation::QualifierMa
 			const Qualifier& qb = iter->second;
 			if ( qa.mCount != qb.mCount ) {
 				throw Operation::ExcQualifierMergeCountMismatch( "Unable to merge qualifiers. Count mismatch for \"" + name + "\"." );
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 			} else if ( qa.mPrecision != qb.mPrecision ) {
 				throw Operation::ExcQualifierMergePrecisionMismatch( "Unable to merge qualifiers. Precision mismatch for \"" + name + "\"." );
 #endif
@@ -173,7 +173,7 @@ string Operation::qualifiersToString( const QualifierMap& qualifiers, bool isFra
 				storage = "const";
 				break;
 			case QualifierStorage_Input:
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 				if ( isFragment ) {
 					storage = "varying";
 				} else {
@@ -186,7 +186,7 @@ string Operation::qualifiersToString( const QualifierMap& qualifiers, bool isFra
 			case QualifierStorage_None:
 				break;
 			case QualifierStorage_Output:
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 				storage = "varying";
 #else
 				storage = "out";
@@ -197,7 +197,7 @@ string Operation::qualifiersToString( const QualifierMap& qualifiers, bool isFra
 				break;
 		}
 		
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 		string precision	= "";
 		switch ( q.mPrecision ) {
 			case QualifierPrecision_High:
@@ -260,7 +260,7 @@ string Operation::qualifiersToString( const QualifierMap& qualifiers, bool isFra
 			case QualifierType_SamplerCube:
 				type = "samplerCube";
 				break;
-#if !defined ( CINDER_GL_ES_2 )
+#if !defined( CINDER_GL_ES_2 )
 			case QualifierType_Double:
 				type = "double";
 				break;
@@ -372,7 +372,7 @@ string Operation::qualifiersToString( const QualifierMap& qualifiers, bool isFra
 		if ( !storage.empty() ) {
 			line = storage + " ";
 		}
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 		if ( !precision.empty() ) {
 			line += precision + " ";
 		}
@@ -400,21 +400,21 @@ string Operation::versionToString( const Operation& op )
 {
 	string output	= "#version ";
 #if defined( CINDER_GL_ES_2 )
-	string version	= "100 es";
+	output += "100 es";
 #elif defined( CINDER_GL_ES_3 )
-	string version	= "300 es";
+	output += "300 es";
 #else
-	uint32_t major	= op.getMajorVersion();
-	uint32_t minor	= op.getMinorVersion();
-	string version	= cinder::toString( major ) + cinder::toString( minor ) + "0";
+	uint32_t major = op.getMajorVersion();
+	uint32_t minor = op.getMinorVersion();
 	if ( major == 3 && minor == 2 ) {
-		version		= "150";
+		output += "150";
+	} else {
+		output += cinder::toString( major ) + cinder::toString( minor ) + "0";
 	}
 	if ( op.getCoreProfile() ) {
-		output		+= " core";
+		output += " core";
 	}
 #endif
-	output			+= "\r\n";
 	return output;
 }
 
@@ -522,7 +522,7 @@ void Operation::setVersion( uint32_t major, uint32_t minor )
 string Operation::toString() const
 {
 	string output;
-	output = Operation::versionToString( *this );
+	output = Operation::versionToString( *this ) + "\r\n";
 	output += "\r\nvoid main( void )\r\n{\r\n";
 	output += "}\r";
 	return output;
@@ -545,7 +545,7 @@ Operation::ExcQualifierMergeCountMismatch::ExcQualifierMergeCountMismatch( const
 {
 }
 	
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 Operation::ExcQualifierMergePrecisionMismatch::ExcQualifierMergePrecisionMismatch( const string& msg ) throw()
 : Operation::Exception( msg )
 {
@@ -583,8 +583,8 @@ FragmentOperation::FragmentOperation()
 string FragmentOperation::toString() const
 {
 	string output;
-	output = Operation::versionToString( *this );
-	output += Operation::qualifiersToString( mQualifiers, false );
+	output = Operation::versionToString( *this ) + "\r\n";
+	output += Operation::qualifiersToString( mQualifiers, false ) + "\r\n";
 #if !defined( CINDER_GL_ES_2 )
 	output += "out vec4 gl_FragColor;\r\n";
 #endif
@@ -606,8 +606,8 @@ VertexOperation::VertexOperation()
 string VertexOperation::toString() const
 {
 	string output;
-	output = Operation::versionToString( *this );
-	output += Operation::qualifiersToString( mQualifiers, false );
+	output = Operation::versionToString( *this ) + "\r\n";
+	output += Operation::qualifiersToString( mQualifiers, false ) + "\r\n";
 	output += "\r\nvoid main( void ) {\r\n";
 	output += kernelToString( *this );
 	output += "\r\n";
@@ -740,8 +740,8 @@ void FragmentExposure::setUniform( const string& uniformName )
 string FragmentExposure::toString() const
 {
 	QualifierMap q	= mergeQualifiers( mQualifiers, mInput->getQualifiers() );
-	string output	= Operation::versionToString( *this );
-	output			+= Operation::qualifiersToString( q, true );
+	string output	= Operation::versionToString( *this ) + "\r\n";
+	output			+= Operation::qualifiersToString( q, true ) + "\r\n";
 	
 	// TODO 
 	// write input operation's result to local var

@@ -14,7 +14,7 @@ protected:
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 	enum : size_t
 	{
 		QualifierPrecision_None,
@@ -46,7 +46,7 @@ protected:
 		QualifierType_Mat4,
 		QualifierType_Sampler2d,
 		QualifierType_SamplerCube,
-#if !defined ( CINDER_GL_ES_2 )
+#if !defined( CINDER_GL_ES_2 )
 		QualifierType_Double,
 		QualifierType_DVec2, QualifierType_DVec3, QualifierType_DVec4,
 		QualifierType_DMat2, QualifierType_DMat2x2, QualifierType_DMat2x3, QualifierType_DMat2x4,
@@ -68,7 +68,7 @@ protected:
 		Qualifier();
 
 		size_t					mCount;
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 		QualifierPrecision		mPrecision;
 #endif
 		QualifierStorage		mStorage;
@@ -127,8 +127,8 @@ protected:
 	uint32_t					mVersionMinor;
 #endif
 
-	QualifierMap				mQualifiers;
 	std::vector<Kernel>			mKernels;
+	QualifierMap				mQualifiers;
 public:
 	Operation();
 	
@@ -187,7 +187,7 @@ public:
 		ExcQualifierMergeCountMismatch( const std::string& msg ) throw();
 	};
 	
-#if defined ( CINDER_GL_ES_2 )
+#if defined( CINDER_GL_ES_2 )
 	class ExcQualifierMergePrecisionMismatch : public Exception
 	{
 	public:
