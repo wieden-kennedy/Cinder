@@ -121,8 +121,8 @@ string Operation::kernelToString( const Operation& op )
 		output			+= "vec4 " + sOutputName + index + ";\r\n";
 		output			+= "\t{\r\n";
 		output			+= "\t\t" + iter->getBodyExpression();
+		output			+= "\t\t" + sOutputName + index + " = " + iter->getOutputExpression() + ";\r\n";
 		output			+= "\t}\r\n";
-		output			+= "\t" + sOutputName + index + " = " + iter->getOutputExpression() + ";\r\n";
 	}
 	return output;
 }
