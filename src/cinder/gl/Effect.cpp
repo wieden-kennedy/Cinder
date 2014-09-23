@@ -76,9 +76,6 @@ void Operation::Kernel::setOutputExpression( const string& exp )
 string Operation::sOutputName = "ciOutput";
 
 Operation::Operation()
-#if !defined( CINDER_GL_ES )
-: mCoreProfile( false ), mVersionMajor( 3 ), mVersionMinor( 2 )
-#endif
 {
 	mKernels.push_back( Kernel() );
 }
@@ -404,16 +401,7 @@ string Operation::versionToString( const Operation& op )
 #elif defined( CINDER_GL_ES_3 )
 	output += "300 es";
 #else
-	uint32_t major = op.getMajorVersion();
-	uint32_t minor = op.getMinorVersion();
-	if ( major == 3 && minor == 2 ) {
-		output += "150";
-	} else {
-		output += cinder::toString( major ) + cinder::toString( minor ) + "0";
-	}
-	if ( op.getCoreProfile() ) {
-		output += " core";
-	}
+	output += "150";
 #endif
 	return output;
 }
@@ -479,45 +467,15 @@ void Operation::operator/=( const Operation& rhs )
 	merge( rhs, OperatorType_Divide );
 }
 
-#if !defined( CINDER_GL_ES )
-Operation& Operation::coreProfile( bool enable )
+const vector<Operation::Kernel>& Operation::getKernels() const
 {
-	setCoreProfile( enable );
-	return *this;
+	return mKernels;
 }
 
-Operation& Operation::version( uint32_t major, uint32_t minor )
+const Operation::QualifierMap& Operation::getQualifiers() const
 {
-	setVersion( major, minor );
-	return *this;
+	return mQualifiers;
 }
-
-bool Operation::getCoreProfile() const
-{
-	return mCoreProfile;
-}
-
-uint32_t Operation::getMajorVersion() const
-{
-	return mVersionMajor;
-}
-
-uint32_t Operation::getMinorVersion() const
-{
-	return mVersionMinor;
-}
-
-void Operation::setCoreProfile( bool enable )
-{
-	mCoreProfile = enable;
-}
-
-void Operation::setVersion( uint32_t major, uint32_t minor )
-{
-	mVersionMajor = major;
-	mVersionMinor = minor;
-}
-#endif
 
 string Operation::toString() const
 {

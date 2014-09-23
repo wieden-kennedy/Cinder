@@ -122,12 +122,6 @@ protected:
 	static std::string			versionToString( const Operation& op );
 
 	void						merge( const Operation& rhs, OperatorType type );
-	
-#if !defined( CINDER_GL_ES )
-	bool						mCoreProfile;
-	uint32_t					mVersionMajor;
-	uint32_t					mVersionMinor;
-#endif
 
 	std::vector<Kernel>			mKernels;
 	QualifierMap				mQualifiers;
@@ -145,18 +139,6 @@ public:
 	void						operator/=( const Operation& rhs );
 
 	// TODO dot, cross, etc
-	
-#if !defined( CINDER_GL_ES )
-	Operation&					coreProfile( bool enable = true );
-	Operation&					version( uint32_t major, uint32_t minor );
-
-	bool						getCoreProfile() const;
-	uint32_t					getMajorVersion() const;
-	uint32_t					getMinorVersion() const;
-
-	void						setCoreProfile( bool enable );
-	void						setVersion( uint32_t major, uint32_t minor );
-#endif
 
 	const std::vector<Kernel>&	getKernels() const;
 	const QualifierMap&			getQualifiers() const;
