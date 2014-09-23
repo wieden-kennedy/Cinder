@@ -349,7 +349,7 @@ string Operation::qualifiersToString() const
 		line += name;
 		
 		if ( q.mCount > 1 ) {
-			line += "[" + cinder::toString( q.mCount ) + "]";
+			line += "[ " + cinder::toString( q.mCount ) + " ]";
 		}
 		if ( !q.mValue.empty() ) {
 			line += " = " + q.mValue;
@@ -365,7 +365,7 @@ string Operation::qualifiersToString() const
 string Operation::toString() const
 {
 	string output	= qualifiersToString();
-	output			+= "\r\nvoid main( void ) {\r\n";
+	output			+= "\r\nvoid main( void )\r\n{\r\n";
 
 	output			+= "}\r";
 	return output;
