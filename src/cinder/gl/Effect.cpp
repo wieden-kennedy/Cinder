@@ -642,8 +642,7 @@ void FragmentExposure::setUniform( const std::string& uniformName )
 string FragmentExposure::toString() const
 {
 	FragmentOperation op = *this;
-	map<string, Operation::Qualifier> q = mInput->mQualifiers;
-	op.mergeQualifiers( q );
+	op.mergeQualifiers( mInput->mQualifiers );
 
 	// TODO 
 	// write input operation's result to local var
