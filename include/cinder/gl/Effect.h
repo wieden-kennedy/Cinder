@@ -112,8 +112,6 @@ protected:
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
-	static std::string			sOutputName;
-
 	static QualifierMap			mergeQualifiers( const QualifierMap& a, const QualifierMap& b );
 
 	static std::string			kernelToString( const Operation& op );
@@ -128,22 +126,22 @@ protected:
 public:
 	Operation();
 	
-	Operation					operator+( const Operation& rhs );
-	Operation 					operator*( const Operation& rhs );
-	Operation 					operator-( const Operation& rhs );
-	Operation 					operator/( const Operation& rhs );
+	virtual Operation					operator+( const Operation& rhs );
+	virtual Operation 					operator*( const Operation& rhs );
+	virtual Operation 					operator-( const Operation& rhs );
+	virtual Operation 					operator/( const Operation& rhs );
 	
-	void						operator+=( const Operation& rhs );
-	void						operator*=( const Operation& rhs );
-	void						operator-=( const Operation& rhs );
-	void						operator/=( const Operation& rhs );
+	virtual void						operator+=( const Operation& rhs );
+	virtual void						operator*=( const Operation& rhs );
+	virtual void						operator-=( const Operation& rhs );
+	virtual void						operator/=( const Operation& rhs );
 
 	// TODO dot, cross, etc
 
-	const std::vector<Kernel>&	getKernels() const;
-	const QualifierMap&			getQualifiers() const;
+	virtual const std::vector<Kernel>&	getKernels() const;
+	virtual const QualifierMap&			getQualifiers() const;
 
-	virtual std::string			toString() const;
+	virtual std::string					toString() const;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -196,18 +194,40 @@ std::ostream& operator<<( std::ostream& out, const Operation& op );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class FragmentOperation : public Operation
+{
+public:
+	FragmentOperation();
+
+	virtual FragmentOperation	operator+( const FragmentOperation& rhs );
+	virtual FragmentOperation 	operator*( const FragmentOperation& rhs );
+	virtual FragmentOperation 	operator-( const FragmentOperation& rhs );
+	virtual FragmentOperation 	operator/( const FragmentOperation& rhs );
+	
+	virtual void				operator+=( const FragmentOperation& rhs );
+	virtual void				operator*=( const FragmentOperation& rhs );
+	virtual void				operator-=( const FragmentOperation& rhs );
+	virtual void				operator/=( const FragmentOperation& rhs );
+
+	virtual std::string			toString() const;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 class VertexOperation : public Operation
 {
 public:
 	VertexOperation();
 
-	virtual std::string			toString() const;
-};
-
-class FragmentOperation : public Operation
-{
-public:
-	FragmentOperation();
+	virtual VertexOperation		operator+( const VertexOperation& rhs );
+	virtual VertexOperation 	operator*( const VertexOperation& rhs );
+	virtual VertexOperation 	operator-( const VertexOperation& rhs );
+	virtual VertexOperation 	operator/( const VertexOperation& rhs );
+	
+	virtual void				operator+=( const VertexOperation& rhs );
+	virtual void				operator*=( const VertexOperation& rhs );
+	virtual void				operator-=( const VertexOperation& rhs );
+	virtual void				operator/=( const VertexOperation& rhs );
 
 	virtual std::string			toString() const;
 };
@@ -222,10 +242,22 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class FragmentColor : public FragmentOperation
+{
+public:
+	FragmentColor();
+};
+
 class FragmentTexture : public FragmentOperation
 {
 public:
 	FragmentTexture();
+
+	FragmentTexture&			texture( const std::string& uniformName );
+	const std::string&			getTextureUniform() const;
+	void						setTextureUniform( const std::string& uniformName );
+protected:
+	std::string					mUniformTexture;
 };
 
 class FragmentExposure : public FragmentOperation

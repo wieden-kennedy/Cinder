@@ -199,6 +199,9 @@
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\assets\texture.jpg" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

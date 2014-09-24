@@ -2,6 +2,12 @@
 
 #include "cinder/Utilities.h"
 
+#define CI_GLSL_OUTPUT_NAME			"ciOutput"
+#define CI_GLSL_OUTPUT_NAME_FRAG	"gl_FragColor"
+#define CI_GLSL_OUTPUT_NAME_VERT	"gl_Position"
+#define CI_GLSL_MAIN_CLOSE			"}\r\n"
+#define CI_GLSL_MAIN_OPEN			"void main( void )\r\n{\r\n"
+
 namespace cinder { namespace gl { namespace effect {
 
 using namespace std;
@@ -73,8 +79,6 @@ void Operation::Kernel::setOutputExpression( const string& exp )
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-string Operation::sOutputName = "ciOutput";
-
 Operation::Operation()
 {
 	mKernels.push_back( Kernel() );
@@ -118,10 +122,14 @@ string Operation::kernelToString( const Operation& op )
 #if defined( CINDER_GL_ES_2 )
 		output			+= "highp ";
 #endif
-		output			+= "vec4 " + sOutputName + index + ";\r\n";
+		output			+= "vec4 ";
+		output			+= CI_GLSL_OUTPUT_NAME;
+		output			+= index + ";\r\n";
 		output			+= "\t{\r\n";
-		output			+= "\t\t" + iter->getBodyExpression();
-		output			+= "\t\t" + sOutputName + index + " = " + iter->getOutputExpression() + ";\r\n";
+		output			+= "\t\t" + iter->getBodyExpression() + "\r\n";
+		output			+= "\t\t";
+		output			+= CI_GLSL_OUTPUT_NAME;
+		output			+= index + " = " + iter->getOutputExpression() + ";\r\n";
 		output			+= "\t}\r\n";
 	}
 	return output;
@@ -133,25 +141,28 @@ string Operation::outputToString( const Operation& op )
 #if defined( CINDER_GL_ES_2 )
 	output += "highp ";
 #endif
-	output += "vec4( 0.0, 0.0, 0.0, 0.0 )";
+	output += "";
 	size_t i = 0;
 	for ( vector<Kernel>::const_iterator iter = op.getKernels().begin(); iter != op.getKernels().end(); ++iter, ++i ) {
-		output += " ";
-		switch ( iter->getOperatorType() ) {
-		case OperatorType_Add:
-			output += "+";
-			break;
-		case OperatorType_Divide:
-			output += "/";
-			break;
-		case OperatorType_Multiply:
-			output += "*";
-			break;
-		case OperatorType_Subtract:
-			output += "-";
-			break;
+		if ( iter != op.getKernels().begin() ) {
+			output += " ";
+			switch ( iter->getOperatorType() ) {
+			case OperatorType_Add:
+				output += "+";
+				break;
+			case OperatorType_Divide:
+				output += "/";
+				break;
+			case OperatorType_Multiply:
+				output += "*";
+				break;
+			case OperatorType_Subtract:
+				output += "-";
+				break;
+			}
+			output += " ";
 		}
-		output += " " + sOutputName + cinder::toString( i );
+		output += CI_GLSL_OUTPUT_NAME + cinder::toString( i );
 	}
 	return output;
 }
@@ -481,8 +492,8 @@ string Operation::toString() const
 {
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
-	output += "\r\nvoid main( void )\r\n{\r\n";
-	output += "}\r";
+	output += CI_GLSL_MAIN_OPEN;
+	output += CI_GLSL_MAIN_CLOSE;
 	return output;
 }
 	
@@ -533,27 +544,129 @@ FragmentOperation::FragmentOperation()
 {
 }
 
+FragmentOperation FragmentOperation::operator+( const FragmentOperation& rhs )
+{
+	FragmentOperation lhs = *this;
+	lhs += rhs;
+	return lhs;
+}
+	
+FragmentOperation FragmentOperation::operator*( const FragmentOperation& rhs )
+{
+	FragmentOperation lhs = *this;
+	lhs *= rhs;
+	return lhs;
+}
+	
+FragmentOperation FragmentOperation::operator-( const FragmentOperation& rhs )
+{
+	FragmentOperation lhs = *this;
+	lhs -= rhs;
+	return lhs;
+}
+	
+FragmentOperation FragmentOperation::operator/( const FragmentOperation& rhs )
+{
+	FragmentOperation lhs = *this;
+	lhs /= rhs;
+	return lhs;
+}
+	
+void FragmentOperation::operator+=( const FragmentOperation& rhs )
+{
+	return Operation::operator+=( rhs );
+}
+
+void FragmentOperation::operator*=( const FragmentOperation& rhs )
+{
+	return Operation::operator*=( rhs );
+}
+
+void FragmentOperation::operator-=( const FragmentOperation& rhs )
+{
+	return Operation::operator*=( rhs );
+}
+
+void FragmentOperation::operator/=( const FragmentOperation& rhs )
+{
+	return Operation::operator/=( rhs );
+}
+
 string FragmentOperation::toString() const
 {
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
-	output += Operation::qualifiersToString( mQualifiers, false ) + "\r\n";
+	output += Operation::qualifiersToString( mQualifiers, true ) + "\r\n";
 #if !defined( CINDER_GL_ES_2 )
-	output += "out vec4 gl_FragColor;\r\n";
+	output += "out vec4 ";
+	output += CI_GLSL_OUTPUT_NAME_FRAG;
+	output += ";\r\n\r\n";
 #endif
-	output += "\r\nvoid main( void ) {\r\n";
+	output += CI_GLSL_MAIN_OPEN;
 	output += kernelToString( *this );
 	output += "\r\n";
-	output += "\tgl_FragColor = ";
+	output += "\t";
+	output += CI_GLSL_OUTPUT_NAME_FRAG;
+	output += " = ";
 	output += outputToString( *this );
 	output += ";\r\n";
-	output += "}\r";
+	output += CI_GLSL_MAIN_CLOSE;
 	return output;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 VertexOperation::VertexOperation()
 : Operation()
 {
+}
+
+VertexOperation VertexOperation::operator+( const VertexOperation& rhs )
+{
+	VertexOperation lhs = *this;
+	lhs += rhs;
+	return lhs;
+}
+	
+VertexOperation VertexOperation::operator*( const VertexOperation& rhs )
+{
+	VertexOperation lhs = *this;
+	lhs *= rhs;
+	return lhs;
+}
+	
+VertexOperation VertexOperation::operator-( const VertexOperation& rhs )
+{
+	VertexOperation lhs = *this;
+	lhs -= rhs;
+	return lhs;
+}
+	
+VertexOperation VertexOperation::operator/( const VertexOperation& rhs )
+{
+	VertexOperation lhs = *this;
+	lhs /= rhs;
+	return lhs;
+}
+	
+void VertexOperation::operator+=( const VertexOperation& rhs )
+{
+	return Operation::operator+=( rhs );
+}
+
+void VertexOperation::operator*=( const VertexOperation& rhs )
+{
+	return Operation::operator*=( rhs );
+}
+
+void VertexOperation::operator-=( const VertexOperation& rhs )
+{
+	return Operation::operator*=( rhs );
+}
+
+void VertexOperation::operator/=( const VertexOperation& rhs )
+{
+	return Operation::operator/=( rhs );
 }
 
 string VertexOperation::toString() const
@@ -561,13 +674,12 @@ string VertexOperation::toString() const
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
 	output += Operation::qualifiersToString( mQualifiers, false ) + "\r\n";
-	output += "\r\nvoid main( void ) {\r\n";
-	output += kernelToString( *this );
-	output += "\r\n";
-	output += "\tgl_Position = ";
-	output += outputToString( *this );
-	output += ";\r\n";
-	output += "}\r";
+	output += CI_GLSL_MAIN_OPEN;
+	output += kernelToString( *this ) + "\r\n";
+	output += "\t";
+	output += CI_GLSL_OUTPUT_NAME_VERT;
+	output += " = " + outputToString( *this ) + ";\r\n";
+	output += CI_GLSL_MAIN_CLOSE;
 	return output;
 }
 
@@ -588,16 +700,30 @@ VertexPassThrough::VertexPassThrough()
 	u4x4.mStorage	= QualifierStorage_Uniform;
 	u4x4.mType		= QualifierType_Mat4;
 	
+	mQualifiers[ "ciColor" ]				= i4;
 	mQualifiers[ "ciPosition" ]				= i4;
 	mQualifiers[ "ciTexCoord0" ]			= i4;
+	mQualifiers[ "vColor" ]					= o4;
 	mQualifiers[ "vTexCoord0" ]				= o4;
 	mQualifiers[ "ciModelViewProjection" ]	= u4x4;
 	
-	mKernels.front().bodyExpression( "vTexCoord0 = ciTexCoord0;" )
+	mKernels.front().bodyExpression( "vColor = ciColor;\r\n\t\tvTexCoord0 = ciTexCoord0;" )
 		.outputExpression( "ciModelViewProjection * ciPosition" );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+FragmentColor::FragmentColor()
+: FragmentOperation()
+{
+	Qualifier i4;
+	i4.mStorage	= QualifierStorage_Input;
+	i4.mType	= QualifierType_Vec4;
+	
+	mQualifiers[ "vColor" ] = i4;
+
+	mKernels.front().outputExpression( "vColor" );
+}
 
 FragmentTexture::FragmentTexture()
 : FragmentOperation()
@@ -606,14 +732,36 @@ FragmentTexture::FragmentTexture()
 	i4.mStorage	= QualifierStorage_Input;
 	i4.mType	= QualifierType_Vec4;
 	
+	setTextureUniform( "uTexture" );
+
+	mQualifiers[ "vTexCoord0" ] = i4;
+}
+
+FragmentTexture& FragmentTexture::texture( const string& uniformName )
+{
+	setTextureUniform( uniformName );
+	return *this;
+}
+
+const string& FragmentTexture::getTextureUniform() const
+{
+	return mUniformTexture;
+}
+
+void FragmentTexture::setTextureUniform( const string& uniformName )
+{
+	if ( mQualifiers.find( mUniformTexture ) != mQualifiers.end() ) {
+		mQualifiers.erase( mUniformTexture );
+	}
+	mUniformTexture = uniformName;
+
 	Qualifier uSampler2d;
 	uSampler2d.mStorage	= QualifierStorage_Uniform;
 	uSampler2d.mType	= QualifierType_Sampler2d;
+
+	mQualifiers[ mUniformTexture ] = uSampler2d;
 	
-	mQualifiers[ "vTexCoord0" ] = i4;
-	mQualifiers[ "uTexture" ]	= uSampler2d;
-	
-	mKernels.front().bodyExpression( "vec4 color = texture( uTexture, vTexCoord0.st );" )
+	mKernels.front().bodyExpression( "vec4 color = texture( " + mUniformTexture + ", vTexCoord0.st );" )
 		.outputExpression( "color" );
 }
 
@@ -695,12 +843,14 @@ string FragmentExposure::toString() const
 	QualifierMap q		= mergeQualifiers( mQualifiers, mInput->getQualifiers() );
 	string inputKernel	= Operation::kernelToString( *mInput );
 	string inputOutput	= Operation::outputToString( *mInput );
-	string exposureName	= sOutputName + "Exposure";
+	string exposureName	= CI_GLSL_OUTPUT_NAME;
+	exposureName		+= "Exposure";
 
+	// TODO this is too hardcoded
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
 	output += Operation::qualifiersToString( q, true ) + "\r\n";
-	output += "\r\nvoid main( void ) {\r\n";
+	output += CI_GLSL_MAIN_OPEN;
 	output += inputKernel + "\r\n";
 	output += "\t";
 #if defined( CINDER_GL_ES_2 )
@@ -708,8 +858,10 @@ string FragmentExposure::toString() const
 #endif
 	output += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
 	output += exposureName + " = pow( " + exposureName +  ", " + mUniformExposure + " + " + mUniformOffset + " );\r\n";
-	output += "\tgl_FragColor = " + exposureName + ";\r\n";
-	output += "}\r";
+	output += "\t";
+	output += CI_GLSL_OUTPUT_NAME_FRAG;
+	output += " = " + exposureName + ";\r\n";
+	output += CI_GLSL_MAIN_CLOSE;
 	return output;
 }
 
