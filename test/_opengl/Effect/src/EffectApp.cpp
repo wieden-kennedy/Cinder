@@ -59,13 +59,10 @@ void EffectApp::setup()
 
 	FragmentOperation opFrag = mEffectFrag * FragmentColor();
 	console() << VertexPassThrough() << endl << endl;
-	console() << opFrag << endl << endl;
+	console() << FragmentTexture() << endl << endl;
 
 	try {
-		mGlslProg = gl::GlslProg::create( 
-			VertexPassThrough().toString().c_str(), 
-			opFrag.toString().c_str() 
-			);
+		mGlslProg = gl::GlslProg::create( VertexPassThrough(), opFrag );
 	} catch ( gl::GlslProgCompileExc ex ) {
 		console() << ex.what() << endl;
 	}

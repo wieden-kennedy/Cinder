@@ -44,6 +44,11 @@
 
 namespace cinder { namespace gl {
 
+namespace effect {
+	class FragmentOperation;
+	class VertexOperation;
+}
+
 typedef std::shared_ptr<class GlslProg> GlslProgRef;
 
 class GlslProg : public std::enable_shared_from_this<GlslProg> {
@@ -132,6 +137,7 @@ class GlslProg : public std::enable_shared_from_this<GlslProg> {
 	static GlslProgRef create( const Format &format );  
 	static GlslProgRef create( DataSourceRef vertexShader, DataSourceRef fragmentShader = DataSourceRef() );
 	static GlslProgRef create( const char *vertexShader, const char *fragmentShader = 0 );
+	static GlslProgRef create( const effect::VertexOperation& vert, const effect::FragmentOperation& frag );
 	
 	~GlslProg();
 	

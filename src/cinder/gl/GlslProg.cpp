@@ -23,6 +23,7 @@
 #include "cinder/gl/GlslProg.h"
 #include "cinder/gl/Context.h"
 #include "cinder/gl/ConstantStrings.h"
+#include "cinder/gl/Effect.h"
 #include "cinder/gl/Environment.h"
 #include "cinder/Log.h"
 
@@ -159,6 +160,13 @@ GlslProgRef GlslProg::create( DataSourceRef vertexShader, DataSourceRef fragment
 GlslProgRef GlslProg::create( const char *vertexShader, const char *fragmentShader )
 {
 	return GlslProgRef( new GlslProg( GlslProg::Format().vertex( vertexShader ).fragment( fragmentShader ) ) );
+}
+
+GlslProgRef GlslProg::create( const effect::VertexOperation& vert, const effect::FragmentOperation& frag )
+{
+	effect::VertexOperation v( vert );
+    //effect::Operation::sync( &v, frag );
+    return GlslProg::create( v.toString().c_str(), frag.toString().c_str() );
 }
 	
 GlslProg::~GlslProg()
