@@ -13,7 +13,7 @@ namespace cinder { namespace gl { namespace effect {
 using namespace std;
 	
 Operation::Qualifier::Qualifier()
-: mCount( 1 ),
+: mCount( 1 ), mName( "" ), 
 #if defined( CINDER_GL_ES_2 )
 mPrecision( QualifierPrecision_High ),
 #endif
@@ -21,13 +21,13 @@ mStorage( QualifierStorage_None ), mType( QualifierType_None )
 {
 }
 
-Operation::Qualifier::Qualifier( QualifierStorage storage, QualifierType type, 
-								 const string& value, 
+Operation::Qualifier::Qualifier( const string& name, QualifierStorage storage, 
+								 QualifierType type, const string& value, 
 #if defined( CINDER_GL_ES_2 )
 								 QualifierPrecision precision, 
 #endif
 								 size_t count )
-: mCount( count ), 
+: mCount( count ), mName( name ), 
 #if defined( CINDER_GL_ES_2 )
 mPrecision( precision ), 
 #endif
@@ -804,13 +804,13 @@ FragmentColor::FragmentColor()
 FragmentTexture2d::FragmentTexture2d()
 : FragmentOperation()
 {
-	mQualifiers[ "vTexCoord0" ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );
+	mQualifiers[ "vTexCoord0" ] = Qualifier( "vTexCoord0", QualifierStorage_Input, QualifierType_Vec4 );
 	texture( "uTexture0" );
 }
 
 FragmentTexture2d& FragmentTexture2d::texture( const string& uniformName )
 {
-	setQualifier( mNameTexture, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Sampler2d ) );
+	setQualifier( mNameTexture, uniformName, Qualifier( uniformName, QualifierStorage_Uniform, QualifierType_Sampler2d ) );
 		
 	mKernels.front().bodyExpression( "vec4 color = texture( " + mNameTexture + ", vTexCoord0.st );" )
 		.outputExpression( "color" );
@@ -827,13 +827,13 @@ FragmentExposure::FragmentExposure( FragmentOperation* op )
 
 FragmentExposure& FragmentExposure::exposure( const string& uniformName )
 {
-	setQualifier( mNameExposure, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Float ) );
+	setQualifier( mNameExposure, uniformName, Qualifier( uniformName, QualifierStorage_Uniform, QualifierType_Float ) );
 	return *this;
 }
 
 FragmentExposure& FragmentExposure::exposure( float v )
 {
-	setQualifier( mNameExposure, "kExposure", Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
+	setQualifier( mNameExposure, "kExposure", Qualifier( "kExposure", QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
 	return *this;
 }
 
@@ -845,13 +845,13 @@ FragmentExposure& FragmentExposure::input( FragmentOperation* op )
 
 FragmentExposure& FragmentExposure::offset( const string& uniformName )
 {
-	setQualifier( mNameOffset, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Float ) );
+	setQualifier( mNameOffset, uniformName, Qualifier( uniformName, QualifierStorage_Uniform, QualifierType_Float ) );
 	return *this;
 }
 
 FragmentExposure& FragmentExposure::offset( float v )
 {
-	setQualifier( mNameOffset, "kOffset", Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
+	setQualifier( mNameOffset, "kOffset", Qualifier( "kOffset", QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
 	return *this;
 }
 

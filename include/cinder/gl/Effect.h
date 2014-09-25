@@ -68,15 +68,16 @@ protected:
 	{
 	public:
 		Qualifier();
-		Qualifier( QualifierStorage storage, QualifierType type, 
+		Qualifier( const std::string& name, QualifierStorage storage, QualifierType type, 
 				   const std::string& value = "", 
 #if defined( CINDER_GL_ES_2 )
-					QualifierPrecision precision = QualifierPrecision_High, 
+				   QualifierPrecision precision = QualifierPrecision_High, 
 #endif
-					size_t count = 1
+				   size_t count = 1
 				   );
 
 		size_t					mCount;
+		std::string				mName;
 #if defined( CINDER_GL_ES_2 )
 		QualifierPrecision		mPrecision;
 #endif
@@ -135,6 +136,7 @@ protected:
 
 	std::vector<Kernel>			mKernels;
 	QualifierMap				mQualifiers;
+
 
 	friend class				Effect;
 public:
