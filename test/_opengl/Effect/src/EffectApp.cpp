@@ -13,9 +13,10 @@ public:
 	void					prepareSettings( ci::app::AppNative::Settings* settings );
 	void					setup();
 private:
-	ci::gl::effect::Effect	mEffect;
-	ci::gl::GlslProgRef		mGlslProg;
-	ci::gl::TextureRef		mTexture;
+	//ci::gl::effect::Effect	mEffect;
+	ci::gl::effect::Exposure	mEffect;
+	ci::gl::GlslProgRef			mGlslProg;
+	ci::gl::TextureRef			mTexture;
 };
 
 #include "cinder/ImageIo.h"
@@ -34,7 +35,7 @@ void EffectApp::draw()
 		gl::ScopedGlslProg glsl( mGlslProg );
 		mTexture->bind( 0 );
 
-		gl::color( ColorAf( 1.0f, 0.5f, 0.5f, 1.0f ) );
+		gl::color( ColorAf( 1.0f, 1.0f, 1.0f, 1.0f ) );
 		gl::drawSolidRect( getWindowBounds() );
 
 		mTexture->unbind();
@@ -54,7 +55,8 @@ void EffectApp::prepareSettings( Settings* settings )
 void EffectApp::setup()
 {
 	using namespace gl::effect;
-	mEffect = Effect( VertexPassThrough(), FragmentTexture2d() * FragmentColor() );
+	//mEffect = Effect( VertexPassThrough(), FragmentTexture2d() * FragmentColor() );
+	mEffect.exposure( 8.0f ).offset( 1.0f );
 
 	console() << mEffect.getVertexOperation() << endl << endl;
 	console() << mEffect.getFragmentOperation() << endl << endl;

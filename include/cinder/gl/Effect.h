@@ -254,13 +254,15 @@ public:
 	Effect( const VertexOperation& vert = VertexOperation(), 
 			const FragmentOperation& frag = FragmentOperation() );
 
-	FragmentOperation&			getFragmentOperation();
-	const FragmentOperation&	getFragmentOperation() const;
-	VertexOperation&			getVertexOperation();
-	const VertexOperation&		getVertexOperation() const;
+	virtual FragmentOperation&			getFragmentOperation();
+	virtual const FragmentOperation&	getFragmentOperation() const;
+	virtual VertexOperation&			getVertexOperation();
+	virtual const VertexOperation&		getVertexOperation() const;
 protected:
-	FragmentOperation			mFragmentOperation;
-	VertexOperation				mVertexOperation;
+	virtual  void						createVertexOutputs();
+
+	FragmentOperation					mFragmentOperation;
+	VertexOperation						mVertexOperation;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -284,9 +286,9 @@ class FragmentTexture2d : public FragmentOperation
 public:
 	FragmentTexture2d();
 
-	FragmentTexture2d&			texture( const std::string& uniformName );
+	FragmentTexture2d&	texture( const std::string& uniformName );
 protected:
-	std::string					mNameTexture;
+	std::string			mNameTexture;
 };
 
 class FragmentExposure : public FragmentOperation
@@ -294,17 +296,37 @@ class FragmentExposure : public FragmentOperation
 public:
 	FragmentExposure( FragmentOperation* op = nullptr );
 
-	FragmentExposure&			exposure( const std::string& uniformName );
-	FragmentExposure&			exposure( float v );
-	FragmentExposure&			input( FragmentOperation* op );
-	FragmentExposure&			offset( const std::string& uniformName );
-	FragmentExposure&			offset( float v );
+	FragmentExposure&	exposure( const std::string& uniformName );
+	FragmentExposure&	exposure( float v );
+	FragmentExposure&	input( FragmentOperation* op );
+	FragmentExposure&	offset( const std::string& uniformName );
+	FragmentExposure&	offset( float v );
 
-	std::string					toString() const;
+	std::string			toString() const;
 protected:
-	FragmentOperation*			mInput;
-	std::string					mNameExposure;
-	std::string					mNameOffset;
+	FragmentOperation*	mInput;
+	std::string			mNameExposure;
+	std::string			mNameOffset;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Exposure : public Effect
+{
+public:
+	Exposure( float exposure = 1.0f, float offset = 0.0f );
+
+	virtual FragmentOperation&			getFragmentOperation();
+	virtual const FragmentOperation&	getFragmentOperation() const;
+
+	Exposure&			exposure( const std::string& uniformName );
+	Exposure&			exposure( float v );
+	Exposure&			input( const FragmentOperation& op );
+	Exposure&			offset( const std::string& uniformName );
+	Exposure&			offset( float v );
+protected:
+	FragmentExposure	mFragmentExposure;
+	FragmentOperation	mFragmentInput;
 };
 
 } } }

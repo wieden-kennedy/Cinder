@@ -712,24 +712,7 @@ string VertexOperation::toString() const
 Effect::Effect( const VertexOperation& vert, const FragmentOperation& frag )
 : mFragmentOperation( frag ), mVertexOperation( vert )
 {
-	// WIP when an Effect is created, the vertex shader is updated 
-	//     to generate data (ie, pass through attributes) required by
-	//     the fragment shader
-	Operation::QualifierMap& f = mFragmentOperation.mQualifiers;
-	Operation::QualifierMap& v = mVertexOperation.mQualifiers;
-
-	for ( Operation::QualifierMap::iterator iter = f.begin(); iter != f.end(); ++iter ) {
-		Operation::Qualifier& q = iter->second;
-		if ( q.mStorage == Operation::QualifierStorage_Input ) {
-			Operation::Qualifier out( q );
-			out.mStorage		= Operation::QualifierStorage_Output;
-			//v[ iter->first ]	= out;
-
-			// TODO aualifier manager (context) will use attributes from geom:: to...
-			// TODO create attribute on vertex shader
-			// TODO add assignment to vertex body *before* (ie, outside of) kernels
-		}
-	}
+	createVertexOutputs();
 }
 
 FragmentOperation& Effect::getFragmentOperation()
@@ -750,6 +733,28 @@ VertexOperation& Effect::getVertexOperation()
 const VertexOperation& Effect::getVertexOperation() const
 {
 	return mVertexOperation;
+}
+
+void Effect::createVertexOutputs()
+{
+	// WIP when an Effect is created, the vertex shader is updated 
+	//     to generate data (ie, pass through attributes) required by
+	//     the fragment shader
+	Operation::QualifierMap& f = mFragmentOperation.mQualifiers;
+	Operation::QualifierMap& v = mVertexOperation.mQualifiers;
+
+	for ( Operation::QualifierMap::iterator iter = f.begin(); iter != f.end(); ++iter ) {
+		Operation::Qualifier& q = iter->second;
+		if ( q.mStorage == Operation::QualifierStorage_Input ) {
+			Operation::Qualifier out( q );
+			out.mStorage		= Operation::QualifierStorage_Output;
+			//v[ iter->first ]	= out;
+
+			// TODO aualifier manager (context) will use attributes from geom:: to...
+			// TODO create attribute on vertex shader
+			// TODO add assignment to vertex body *before* (ie, outside of) kernels
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -862,6 +867,11 @@ string FragmentExposure::toString() const
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
 	output += Operation::qualifiersToString( q, true ) + "\r\n";
+#if !defined( CINDER_GL_ES_2 )
+	output += "out vec4 ";
+	output += CI_GLSL_OUTPUT_NAME_FRAG;
+	output += ";\r\n\r\n";
+#endif
 	output += CI_GLSL_MAIN_OPEN;
 	output += inputKernel + "\r\n";
 	output += "\t";
@@ -869,12 +879,62 @@ string FragmentExposure::toString() const
 	output += "highp ";
 #endif
 	output += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
-	output += exposureName + " = pow( " + exposureName +  ", " + mNameExposure + " + " + mNameOffset + " );\r\n";
+	output += "\t" + exposureName + " = pow( " + exposureName +  ", vec4( " + mNameExposure + " + " + mNameOffset + " ) );\r\n";
 	output += "\t";
 	output += CI_GLSL_OUTPUT_NAME_FRAG;
 	output += " = " + exposureName + ";\r\n";
 	output += CI_GLSL_MAIN_CLOSE;
 	return output;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+Exposure::Exposure( float exposure, float offset )
+{
+	mFragmentOperation	= FragmentTexture2d() * FragmentColor();
+	mFragmentExposure	= FragmentExposure( &mFragmentOperation ).exposure( exposure ).offset( offset );
+	mVertexOperation	= VertexPassThrough();
+	createVertexOutputs();
+}
+
+FragmentOperation& Exposure::getFragmentOperation()
+{
+	return mFragmentExposure;
+}
+
+const FragmentOperation& Exposure::getFragmentOperation() const
+{
+	return mFragmentExposure;
+}
+
+Exposure& Exposure::exposure( const string& uniformName )
+{
+	mFragmentExposure.exposure( uniformName );
+	return *this;
+}
+
+Exposure& Exposure::exposure( float v )
+{
+	mFragmentExposure.exposure( v );
+	return *this;
+}
+
+Exposure& Exposure::input( const FragmentOperation& op )
+{
+	mFragmentOperation = op;
+	return *this;
+}
+
+Exposure& Exposure::offset( const string& uniformName )
+{
+	mFragmentExposure.offset( uniformName );
+	return *this;
+}
+
+Exposure& Exposure::offset( float v )
+{
+	mFragmentExposure.offset( v );
+	return *this;
 }
 
 } } }
