@@ -68,8 +68,7 @@ protected:
 	{
 	public:
 		Qualifier();
-		Qualifier( const std::string& name, QualifierStorage storage, QualifierType type, 
-				   const std::string& value = "", 
+		Qualifier( QualifierStorage storage, QualifierType type, const std::string& value = "", 
 #if defined( CINDER_GL_ES_2 )
 				   QualifierPrecision precision = QualifierPrecision_High, 
 #endif
@@ -77,7 +76,6 @@ protected:
 				   );
 
 		size_t					mCount;
-		std::string				mName;
 #if defined( CINDER_GL_ES_2 )
 		QualifierPrecision		mPrecision;
 #endif
@@ -124,6 +122,7 @@ protected:
 
 	static QualifierMap			mergeQualifiers( const QualifierMap& a, const QualifierMap& b );
 
+	static std::string			vertexOutputsToString( const QualifierMap& qualifers );
 	static std::string			kernelToString( const Operation& op );
 	static std::string			outputToString( const Operation& op );
 	static std::string			qualifiersToString( const QualifierMap& qualifers, bool isFragment );
