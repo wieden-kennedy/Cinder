@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cinder/Exception.h"
+#include "cinder/GeomIo.h"
 #include <map>
 #include <ostream>
 #include <string>
@@ -120,9 +121,13 @@ protected:
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
+	static std::map<std::string, geom::Attrib>	getDefaultFragmentInputNameToSemanticMap();
+	static std::map<geom::Attrib, std::string>	getSemanticToDefaultFragmentInputNameMap();
+	static std::map<int32_t, std::string>		getSemanticToDefaultUniformNameMap();
+	static std::map<geom::Attrib, std::string>	getSemanticToDefaultVertexInputNameMap();
+
 	static QualifierMap			mergeQualifiers( const QualifierMap& a, const QualifierMap& b );
 
-	static std::string			vertexOutputsToString( const QualifierMap& qualifers );
 	static std::string			kernelToString( const Operation& op );
 	static std::string			outputToString( const Operation& op );
 	static std::string			qualifiersToString( const QualifierMap& qualifers, bool isFragment );
@@ -135,7 +140,6 @@ protected:
 
 	std::vector<Kernel>			mKernels;
 	QualifierMap				mQualifiers;
-
 
 	friend class				Effect;
 public:
@@ -245,6 +249,9 @@ public:
 	virtual void				operator/=( const VertexOperation& rhs );
 
 	virtual std::string			toString() const;
+protected:
+	static std::string			vertexOutputAssignmentToString( const QualifierMap& qualifers );
+	friend class				Effect;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,6 @@
 #include "cinder/gl/Effect.h"
 
+#include "cinder/gl/GlslProg.h"
 #include "cinder/Utilities.h"
 
 #define CI_GLSL_OUTPUT_NAME			"ciOutput"
@@ -96,6 +97,59 @@ void Operation::Kernel::setOutputExpression( const string& exp )
 Operation::Operation()
 {
 	mKernels.push_back( Kernel() );
+}
+
+map<string, geom::Attrib> Operation::getDefaultFragmentInputNameToSemanticMap()
+{
+	static map<string, geom::Attrib> m;
+	if ( m.empty() ) {
+		GlslProg::AttribSemanticMap semanticMap = GlslProg::getDefaultAttribNameToSemanticMap();
+		for ( GlslProg::AttribSemanticMap::const_iterator iter = semanticMap.begin(); iter != semanticMap.end(); ++iter ) {
+			string name = iter->first;
+			if ( name.size() >= 2 ) {
+				name.erase( 0, 2 );
+				name		= "v" + name; // Swap "ci" for "v" (varying)
+				m[ name ]	= iter->second;
+			}
+		}
+	}
+	return m;
+}
+
+map<geom::Attrib, string> Operation::getSemanticToDefaultFragmentInputNameMap()
+{
+	static map<geom::Attrib, string> m;
+	if ( m.empty() ) {
+		map<string, geom::Attrib> semanticMap = getDefaultFragmentInputNameToSemanticMap();
+		for ( map<string, geom::Attrib>::const_iterator iter = semanticMap.begin(); iter != semanticMap.end(); ++iter ) {
+			m[ iter->second ] = iter->first;
+		}
+	}
+	return m;
+}
+
+map<int32_t, string> Operation::getSemanticToDefaultUniformNameMap()
+{
+	static map<int32_t, string> m;
+	if ( m.empty() ) {
+		GlslProg::UniformSemanticMap semanticMap = GlslProg::getDefaultUniformNameToSemanticMap();
+		for ( GlslProg::UniformSemanticMap::const_iterator iter = semanticMap.begin(); iter != semanticMap.end(); ++iter ) {
+			m[ iter->second ] = iter->first;
+		}
+	}
+	return m;
+}
+
+map<geom::Attrib, string> Operation::getSemanticToDefaultVertexInputNameMap()
+{
+	static map<geom::Attrib, string> m;
+	if ( m.empty() ) {
+		GlslProg::AttribSemanticMap semanticMap = GlslProg::getDefaultAttribNameToSemanticMap();
+		for ( GlslProg::AttribSemanticMap::const_iterator iter = semanticMap.begin(); iter != semanticMap.end(); ++iter ) {
+			m[ iter->second ] = iter->first;
+		}
+	}
+	return m;
 }
 
 Operation::QualifierMap Operation::mergeQualifiers( const Operation::QualifierMap& a, const Operation::QualifierMap& b )
@@ -431,11 +485,6 @@ string Operation::versionToString( const Operation& op )
 	return output;
 }
 
-string Operation::vertexOutputsToString( const QualifierMap& q )
-{
-	
-}
-
 void Operation::merge( const Operation& rhs, OperatorType type )
 {
 	if ( !rhs.mKernels.empty() ) {
@@ -698,12 +747,34 @@ void VertexOperation::operator/=( const VertexOperation& rhs )
 	return Operation::operator/=( rhs );
 }
 
+string VertexOperation::vertexOutputAssignmentToString( const QualifierMap& q )
+{
+	string output = "";
+	for ( QualifierMap::const_iterator iter = q.begin(); iter != q.end(); ++iter ) {
+		const string name	= iter->first;
+		const Qualifier& q	= iter->second;
+		if ( q.mStorage == QualifierStorage_Output ) {
+			const map<string, geom::Attrib>& semanticMap = getDefaultFragmentInputNameToSemanticMap();
+			if ( semanticMap.find( name ) != semanticMap.end() ) {
+				geom::Attrib a = semanticMap.at( name );
+				const map<geom::Attrib, string>& attribMap = getSemanticToDefaultVertexInputNameMap();
+				if ( attribMap.find( a ) != attribMap.end() ) {
+					const string& attr = attribMap.at( a );
+					output += "\t" + name + " = " + attr + ";\r\n";
+				}
+			}
+		}
+	}
+	return output;
+}
+
 string VertexOperation::toString() const
 {
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
 	output += Operation::qualifiersToString( mQualifiers, false ) + "\r\n";
 	output += CI_GLSL_MAIN_OPEN;
+	output += vertexOutputAssignmentToString( mQualifiers ) + "\r\n";
 	output += kernelToString( *this ) + "\r\n";
 	output += "\t";
 	output += CI_GLSL_OUTPUT_NAME_VERT;
@@ -748,9 +819,20 @@ void Effect::createVertexOutputs()
 	for ( Operation::QualifierMap::iterator iter = f.begin(); iter != f.end(); ++iter ) {
 		Operation::Qualifier& q = iter->second;
 		if ( q.mStorage == Operation::QualifierStorage_Input ) {
+			const string& name = iter->first;
 			Operation::Qualifier out( q );
-			out.mStorage		= Operation::QualifierStorage_Output;
-			v[ iter->first ]	= out;
+			out.mStorage	= Operation::QualifierStorage_Output;
+			v[ name ]		= out;
+
+			const map<string, geom::Attrib>& semanticMap = Operation::getDefaultFragmentInputNameToSemanticMap();
+			if ( semanticMap.find( name ) != semanticMap.end() ) {
+				geom::Attrib a = semanticMap.at( name );
+				const map<geom::Attrib, string>& attribMap = Operation::getSemanticToDefaultVertexInputNameMap();
+				if ( attribMap.find( a ) != attribMap.end() ) {
+					const string& attr	= attribMap.at( a );
+					v[ attr ]			= q;
+				}
+			}
 		}
 	}
 }
@@ -760,29 +842,12 @@ void Effect::createVertexOutputs()
 VertexPassThrough::VertexPassThrough()
 : VertexOperation()
 {
-	Qualifier i4;
-	i4.mStorage	= QualifierStorage_Input;
-	i4.mType	= QualifierType_Vec4;
+	string pos = getSemanticToDefaultVertexInputNameMap()[ geom::POSITION ];
+	string mvp = getSemanticToDefaultUniformNameMap()[ UNIFORM_MODEL_VIEW_PROJECTION ];
+	mQualifiers[ pos ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );
+	mQualifiers[ mvp ] = Qualifier( QualifierStorage_Uniform, QualifierType_Mat4 );
 	
-	Qualifier o4;
-	o4.mStorage	= QualifierStorage_Output;
-	o4.mType	= QualifierType_Vec4;
-	
-	Qualifier u4x4;
-	u4x4.mStorage	= QualifierStorage_Uniform;
-	u4x4.mType		= QualifierType_Mat4;
-	
-	// TODO let Effect add and pass through attributes 
-	//      as required by the fragment shader
-	mQualifiers[ "ciColor" ]				= i4;
-	mQualifiers[ "ciPosition" ]				= i4;
-	mQualifiers[ "ciTexCoord0" ]			= i4;
-	mQualifiers[ "vColor" ]					= o4;
-	mQualifiers[ "vTexCoord0" ]				= o4;
-	mQualifiers[ "ciModelViewProjection" ]	= u4x4;
-	
-	mKernels.front().bodyExpression( "vColor = ciColor;\r\n\t\tvTexCoord0 = ciTexCoord0;" )
-		.outputExpression( "ciModelViewProjection * ciPosition" );
+	mKernels.front().outputExpression( mvp + " * " + pos );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -790,27 +855,26 @@ VertexPassThrough::VertexPassThrough()
 FragmentColor::FragmentColor()
 : FragmentOperation()
 {
-	Qualifier i4;
-	i4.mStorage	= QualifierStorage_Input;
-	i4.mType	= QualifierType_Vec4;
-	
-	mQualifiers[ "vColor" ] = i4;
+	string attr = getSemanticToDefaultFragmentInputNameMap()[ geom::COLOR ];
+	mQualifiers[ attr ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );;
 
-	mKernels.front().outputExpression( "vColor" );
+	mKernels.front().outputExpression( attr );
 }
 
 FragmentTexture2d::FragmentTexture2d()
 : FragmentOperation()
 {
-	mQualifiers[ "vTexCoord0" ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );
+	string attr = getSemanticToDefaultFragmentInputNameMap()[ geom::TEX_COORD_0 ];
+	mQualifiers[ attr ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );
 	texture( "uTexture0" );
 }
 
 FragmentTexture2d& FragmentTexture2d::texture( const string& uniformName )
 {
 	setQualifier( mNameTexture, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Sampler2d ) );
-		
-	mKernels.front().bodyExpression( "vec4 color = texture( " + mNameTexture + ", vTexCoord0.st );" )
+
+	string attr = getSemanticToDefaultFragmentInputNameMap()[ geom::TEX_COORD_0 ];
+	mKernels.front().bodyExpression( "vec4 color = texture( " + mNameTexture + ", " + attr + ".st );" )
 		.outputExpression( "color" );
 	return *this;
 }
