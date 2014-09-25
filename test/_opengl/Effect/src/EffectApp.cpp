@@ -53,9 +53,7 @@ void EffectApp::prepareSettings( Settings* settings )
 
 void EffectApp::setup()
 {
-	gl::enable( GL_TEXTURE_2D );
 	using namespace gl::effect;
-
 	mEffect = Effect( VertexPassThrough(), FragmentTexture2d() * FragmentColor() );
 
 	console() << mEffect.getVertexOperation() << endl << endl;
