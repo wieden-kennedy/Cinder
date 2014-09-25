@@ -8,14 +8,14 @@
 class EffectApp : public ci::app::AppNative 
 {
 public:
-	void							draw();
-	void							keyDown( ci::app::KeyEvent event );
-	void							prepareSettings( ci::app::AppNative::Settings* settings );
-	void							setup();
+	void					draw();
+	void					keyDown( ci::app::KeyEvent event );
+	void					prepareSettings( ci::app::AppNative::Settings* settings );
+	void					setup();
 private:
-	ci::gl::effect::FragmentTexture	mEffectFrag;
-	ci::gl::GlslProgRef				mGlslProg;
-	ci::gl::TextureRef				mTexture;
+	ci::gl::effect::Effect	mEffect;
+	ci::gl::GlslProgRef		mGlslProg;
+	ci::gl::TextureRef		mTexture;
 };
 
 #include "cinder/ImageIo.h"
@@ -32,7 +32,6 @@ void EffectApp::draw()
 
 	if ( mGlslProg && mTexture ) {
 		gl::ScopedGlslProg glsl( mGlslProg );
-		mGlslProg->uniform( mEffectFrag.getTextureUniform(), 0 );
 		mTexture->bind( 0 );
 
 		gl::color( ColorAf( 1.0f, 0.5f, 0.5f, 1.0f ) );
@@ -57,12 +56,13 @@ void EffectApp::setup()
 	gl::enable( GL_TEXTURE_2D );
 	using namespace gl::effect;
 
-	FragmentOperation opFrag = mEffectFrag * FragmentColor();
-	console() << VertexPassThrough() << endl << endl;
-	console() << opFrag << endl << endl;
+	mEffect = Effect( VertexPassThrough(), FragmentTexture2d() * FragmentColor() );
+
+	console() << mEffect.getVertexOperation() << endl << endl;
+	console() << mEffect.getFragmentOperation() << endl << endl;
 
 	try {
-		mGlslProg = gl::GlslProg::create( VertexPassThrough(), opFrag );
+		mGlslProg = gl::GlslProg::create( mEffect );
 	} catch ( gl::GlslProgCompileExc ex ) {
 		console() << ex.what() << endl;
 	}

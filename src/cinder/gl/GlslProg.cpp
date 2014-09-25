@@ -162,11 +162,18 @@ GlslProgRef GlslProg::create( const char *vertexShader, const char *fragmentShad
 	return GlslProgRef( new GlslProg( GlslProg::Format().vertex( vertexShader ).fragment( fragmentShader ) ) );
 }
 
+GlslProgRef GlslProg::create( const effect::Effect& effect )
+{
+    return GlslProg::create( 
+		effect.getVertexOperation().toString().c_str(), 
+		effect.getFragmentOperation().toString().c_str() 
+		);
+}
+
 GlslProgRef GlslProg::create( const effect::VertexOperation& vert, const effect::FragmentOperation& frag )
 {
-	effect::VertexOperation v( vert );
-    //effect::Operation::sync( &v, frag );
-    return GlslProg::create( v.toString().c_str(), frag.toString().c_str() );
+	effect::Effect fx( vert, frag );
+    return GlslProg::create( fx );
 }
 	
 GlslProg::~GlslProg()

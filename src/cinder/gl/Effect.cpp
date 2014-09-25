@@ -20,6 +20,20 @@ mPrecision( QualifierPrecision_High ),
 mStorage( QualifierStorage_None ), mType( QualifierType_None )
 {
 }
+
+Operation::Qualifier::Qualifier( QualifierStorage storage, QualifierType type, 
+								 const string& value, 
+#if defined( CINDER_GL_ES_2 )
+								 QualifierPrecision precision, 
+#endif
+								 size_t count )
+: mCount( count ), 
+#if defined( CINDER_GL_ES_2 )
+mPrecision( precision ), 
+#endif
+mStorage( storage ), mType( type ), mValue( value )
+{
+}
 	
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -393,7 +407,7 @@ string Operation::qualifiersToString( const QualifierMap& qualifiers, bool isFra
 		if ( q.mCount > 1 ) {
 			line += "[ " + cinder::toString( q.mCount ) + " ]";
 		}
-		if ( !q.mValue.empty() ) {
+		if ( q.mStorage == QualifierStorage_Const && !q.mValue.empty() ) {
 			line += " = " + q.mValue;
 		}
 		
@@ -428,6 +442,16 @@ void Operation::merge( const Operation& rhs, OperatorType type )
 			}
 		}
 	}
+}
+
+void Operation::setQualifier( string& oldName, const string& newName, 
+							  const Operation::Qualifier& q )
+{
+	if ( mQualifiers.find( oldName ) != mQualifiers.end() ) {
+		mQualifiers.erase( oldName );
+	}
+	oldName = newName;
+	mQualifiers[ oldName ] = q;
 }
 	
 Operation Operation::operator+( const Operation& rhs )
@@ -684,6 +708,51 @@ string VertexOperation::toString() const
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+Effect::Effect( const VertexOperation& vert, const FragmentOperation& frag )
+: mFragmentOperation( frag ), mVertexOperation( vert )
+{
+	// WIP when an Effect is created, the vertex shader is updated 
+	//     to generate data (ie, pass through attributes) required by
+	//     the fragment shader
+	Operation::QualifierMap& f = mFragmentOperation.mQualifiers;
+	Operation::QualifierMap& v = mVertexOperation.mQualifiers;
+
+	for ( Operation::QualifierMap::iterator iter = f.begin(); iter != f.end(); ++iter ) {
+		Operation::Qualifier& q = iter->second;
+		if ( q.mStorage == Operation::QualifierStorage_Input ) {
+			Operation::Qualifier out( q );
+			out.mStorage		= Operation::QualifierStorage_Output;
+			//v[ iter->first ]	= out;
+
+			// TODO aualifier manager (context) will use attributes from geom:: to...
+			// TODO create attribute on vertex shader
+			// TODO add assignment to vertex body *before* (ie, outside of) kernels
+		}
+	}
+}
+
+FragmentOperation& Effect::getFragmentOperation()
+{
+	return mFragmentOperation;
+}
+
+const FragmentOperation& Effect::getFragmentOperation() const
+{
+	return mFragmentOperation;
+}
+
+VertexOperation& Effect::getVertexOperation()
+{
+	return mVertexOperation;
+}
+
+const VertexOperation& Effect::getVertexOperation() const
+{
+	return mVertexOperation;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 	
 VertexPassThrough::VertexPassThrough()
 : VertexOperation()
@@ -700,6 +769,8 @@ VertexPassThrough::VertexPassThrough()
 	u4x4.mStorage	= QualifierStorage_Uniform;
 	u4x4.mType		= QualifierType_Mat4;
 	
+	// TODO let Effect add and pass through attributes 
+	//      as required by the fragment shader
 	mQualifiers[ "ciColor" ]				= i4;
 	mQualifiers[ "ciPosition" ]				= i4;
 	mQualifiers[ "ciTexCoord0" ]			= i4;
@@ -725,44 +796,34 @@ FragmentColor::FragmentColor()
 	mKernels.front().outputExpression( "vColor" );
 }
 
-FragmentTexture::FragmentTexture()
+FragmentTexture2d::FragmentTexture2d()
 : FragmentOperation()
 {
 	Qualifier i4;
 	i4.mStorage	= QualifierStorage_Input;
 	i4.mType	= QualifierType_Vec4;
 	
-	setTextureUniform( "uTexture" );
+	texture( "uTexture0" );
 
 	mQualifiers[ "vTexCoord0" ] = i4;
 }
 
-FragmentTexture& FragmentTexture::texture( const string& uniformName )
+FragmentTexture2d& FragmentTexture2d::texture( const string& uniformName )
 {
-	setTextureUniform( uniformName );
-	return *this;
-}
-
-const string& FragmentTexture::getTextureUniform() const
-{
-	return mUniformTexture;
-}
-
-void FragmentTexture::setTextureUniform( const string& uniformName )
-{
-	if ( mQualifiers.find( mUniformTexture ) != mQualifiers.end() ) {
-		mQualifiers.erase( mUniformTexture );
+	if ( mQualifiers.find( mNameTexture ) != mQualifiers.end() ) {
+		mQualifiers.erase( mNameTexture );
 	}
-	mUniformTexture = uniformName;
+	mNameTexture = uniformName;
 
 	Qualifier uSampler2d;
 	uSampler2d.mStorage	= QualifierStorage_Uniform;
 	uSampler2d.mType	= QualifierType_Sampler2d;
 
-	mQualifiers[ mUniformTexture ] = uSampler2d;
+	mQualifiers[ mNameTexture ] = uSampler2d;
 	
-	mKernels.front().bodyExpression( "vec4 color = texture( " + mUniformTexture + ", vTexCoord0.st );" )
+	mKernels.front().bodyExpression( "vec4 color = texture( " + mNameTexture + ", vTexCoord0.st );" )
 		.outputExpression( "color" );
+	return *this;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -770,72 +831,37 @@ void FragmentTexture::setTextureUniform( const string& uniformName )
 FragmentExposure::FragmentExposure( FragmentOperation* op )
 : FragmentOperation(), mInput( op )
 {
-	setExposureUniform( "uExposure" );
-	setOffsetUniform( "uOffset" );
+	exposure( 1.0f ).offset( 0.0f );
 }
 
 FragmentExposure& FragmentExposure::exposure( const string& uniformName )
 {
-	setExposureUniform( uniformName );
+	setQualifier( mNameExposure, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Float ) );
+	return *this;
+}
+
+FragmentExposure& FragmentExposure::exposure( float v )
+{
+	setQualifier( mNameExposure, "kExposure", Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
 	return *this;
 }
 
 FragmentExposure& FragmentExposure::input( FragmentOperation* op )
 {
-	setInput( op );
+	mInput = op;
 	return *this;
 }
 
 FragmentExposure& FragmentExposure::offset( const string& uniformName )
 {
-	setOffsetUniform( uniformName );
+	setQualifier( mNameOffset, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Float ) );
 	return *this;
 }
 
-const string& FragmentExposure::getExposureUniform() const
+FragmentExposure& FragmentExposure::offset( float v )
 {
-	return mUniformExposure;
-}
-
-FragmentOperation* FragmentExposure::getInput() const
-{
-	return mInput;
-}
-
-const string& FragmentExposure::getOffsetUniform() const{
-	return mUniformExposure;
-}
-
-void FragmentExposure::setExposureUniform( const string& uniformName )
-{
-	if ( mQualifiers.find( mUniformExposure ) != mQualifiers.end() ) {
-		mQualifiers.erase( mUniformExposure );
-	}
-	mUniformExposure = uniformName;
-	setUniform( uniformName );
-}
-
-void FragmentExposure::setInput( FragmentOperation* op )
-{
-	mInput = op;
-}
-
-void FragmentExposure::setOffsetUniform( const string& uniformName )
-{
-	if ( mQualifiers.find( mUniformOffset ) != mQualifiers.end() ) {
-		mQualifiers.erase( mUniformOffset );
-	}
-	mUniformOffset = uniformName;
-	setUniform( uniformName );
-}
-
-void FragmentExposure::setUniform( const string& uniformName )
-{
-	Qualifier uf;
-	uf.mStorage	= QualifierStorage_Uniform;
-	uf.mType	= QualifierType_Float;
-
-	mQualifiers[ uniformName ] = uf;
+	setQualifier( mNameOffset, "kOffset", Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
+	return *this;
 }
 
 string FragmentExposure::toString() const
@@ -846,7 +872,7 @@ string FragmentExposure::toString() const
 	string exposureName	= CI_GLSL_OUTPUT_NAME;
 	exposureName		+= "Exposure";
 
-	// TODO this is too hardcoded
+	// TODO this is too hardcoded, should leverage base class more
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
 	output += Operation::qualifiersToString( q, true ) + "\r\n";
@@ -857,16 +883,13 @@ string FragmentExposure::toString() const
 	output += "highp ";
 #endif
 	output += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
-	output += exposureName + " = pow( " + exposureName +  ", " + mUniformExposure + " + " + mUniformOffset + " );\r\n";
+	output += exposureName + " = pow( " + exposureName +  ", " + mNameExposure + " + " + mNameOffset + " );\r\n";
 	output += "\t";
 	output += CI_GLSL_OUTPUT_NAME_FRAG;
 	output += " = " + exposureName + ";\r\n";
 	output += CI_GLSL_MAIN_CLOSE;
 	return output;
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 } } }
  

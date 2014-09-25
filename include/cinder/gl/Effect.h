@@ -8,6 +8,8 @@
 
 namespace cinder { namespace gl { namespace effect {
 
+class Effect;
+
 class Operation
 {
 protected:
@@ -66,6 +68,13 @@ protected:
 	{
 	public:
 		Qualifier();
+		Qualifier( QualifierStorage storage, QualifierType type, 
+				   const std::string& value = "", 
+#if defined( CINDER_GL_ES_2 )
+					QualifierPrecision precision = QualifierPrecision_High, 
+#endif
+					size_t count = 1
+				   );
 
 		size_t					mCount;
 #if defined( CINDER_GL_ES_2 )
@@ -75,7 +84,7 @@ protected:
 		QualifierType			mType;
 		std::string				mValue;
 	};
-
+	
 	typedef std::map<std::string, Operation::Qualifier> QualifierMap;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,8 +130,13 @@ protected:
 
 	void						merge( const Operation& rhs, OperatorType type );
 
+	void						setQualifier( std::string& oldName, const std::string& newName, 
+											  const Qualifier& q );
+
 	std::vector<Kernel>			mKernels;
 	QualifierMap				mQualifiers;
+
+	friend class				Effect;
 public:
 	Operation();
 	
@@ -234,6 +248,23 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+class Effect
+{
+public:
+	Effect( const VertexOperation& vert = VertexOperation(), 
+			const FragmentOperation& frag = FragmentOperation() );
+
+	FragmentOperation&			getFragmentOperation();
+	const FragmentOperation&	getFragmentOperation() const;
+	VertexOperation&			getVertexOperation();
+	const VertexOperation&		getVertexOperation() const;
+protected:
+	FragmentOperation			mFragmentOperation;
+	VertexOperation				mVertexOperation;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 class VertexPassThrough : public VertexOperation
 {
 public:
@@ -248,16 +279,14 @@ public:
 	FragmentColor();
 };
 
-class FragmentTexture : public FragmentOperation
+class FragmentTexture2d : public FragmentOperation
 {
 public:
-	FragmentTexture();
+	FragmentTexture2d();
 
-	FragmentTexture&			texture( const std::string& uniformName );
-	const std::string&			getTextureUniform() const;
-	void						setTextureUniform( const std::string& uniformName );
+	FragmentTexture2d&			texture( const std::string& uniformName );
 protected:
-	std::string					mUniformTexture;
+	std::string					mNameTexture;
 };
 
 class FragmentExposure : public FragmentOperation
@@ -266,24 +295,16 @@ public:
 	FragmentExposure( FragmentOperation* op = nullptr );
 
 	FragmentExposure&			exposure( const std::string& uniformName );
+	FragmentExposure&			exposure( float v );
 	FragmentExposure&			input( FragmentOperation* op );
 	FragmentExposure&			offset( const std::string& uniformName );
-
-	const std::string&			getExposureUniform() const;
-	FragmentOperation*			getInput() const;
-	const std::string&			getOffsetUniform() const;
-
-	void						setExposureUniform( const std::string& uniformName );
-	void						setInput( FragmentOperation* op );
-	void						setOffsetUniform( const std::string& uniformName );
+	FragmentExposure&			offset( float v );
 
 	std::string					toString() const;
 protected:
-	void						setUniform( const std::string& uniformName );
-
 	FragmentOperation*			mInput;
-	std::string					mUniformExposure;
-	std::string					mUniformOffset;
+	std::string					mNameExposure;
+	std::string					mNameOffset;
 };
 
 } } }
