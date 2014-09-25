@@ -799,28 +799,14 @@ FragmentColor::FragmentColor()
 FragmentTexture2d::FragmentTexture2d()
 : FragmentOperation()
 {
-	Qualifier i4;
-	i4.mStorage	= QualifierStorage_Input;
-	i4.mType	= QualifierType_Vec4;
-	
+	mQualifiers[ "vTexCoord0" ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );
 	texture( "uTexture0" );
-
-	mQualifiers[ "vTexCoord0" ] = i4;
 }
 
 FragmentTexture2d& FragmentTexture2d::texture( const string& uniformName )
 {
-	if ( mQualifiers.find( mNameTexture ) != mQualifiers.end() ) {
-		mQualifiers.erase( mNameTexture );
-	}
-	mNameTexture = uniformName;
-
-	Qualifier uSampler2d;
-	uSampler2d.mStorage	= QualifierStorage_Uniform;
-	uSampler2d.mType	= QualifierType_Sampler2d;
-
-	mQualifiers[ mNameTexture ] = uSampler2d;
-	
+	setQualifier( mNameTexture, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Sampler2d ) );
+		
 	mKernels.front().bodyExpression( "vec4 color = texture( " + mNameTexture + ", vTexCoord0.st );" )
 		.outputExpression( "color" );
 	return *this;
@@ -872,7 +858,7 @@ string FragmentExposure::toString() const
 	string exposureName	= CI_GLSL_OUTPUT_NAME;
 	exposureName		+= "Exposure";
 
-	// TODO this is too hardcoded, should leverage base class more
+	// TODO this is clumsy -- should leverage base class / kernel more
 	string output;
 	output = Operation::versionToString( *this ) + "\r\n";
 	output += Operation::qualifiersToString( q, true ) + "\r\n";
