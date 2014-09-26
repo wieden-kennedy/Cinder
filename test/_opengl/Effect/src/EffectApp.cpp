@@ -13,8 +13,8 @@ public:
 	void					prepareSettings( ci::app::AppNative::Settings* settings );
 	void					setup();
 private:
-	ci::gl::effect::Effect	mEffect;
-	//ci::gl::effect::Exposure	mEffect;
+	//ci::gl::effect::Effect	mEffect;
+	ci::gl::effect::Exposure	mEffect;
 	ci::gl::GlslProgRef			mGlslProg;
 	ci::gl::TextureRef			mTexture;
 };
@@ -55,8 +55,8 @@ void EffectApp::prepareSettings( Settings* settings )
 void EffectApp::setup()
 {
 	using namespace gl::effect;
-	mEffect = Effect( VertexPassThrough(), FragmentTexture2d() * FragmentColor() );
-	//mEffect.exposure( 8.0f ).offset( 1.0f );
+	//mEffect = Effect( VertexPassThrough(), FragmentTexture2d() * FragmentColor() );
+	mEffect.exposure( 4.0f ).offset( 0.5f );
 
 	console() << mEffect.getVertexOperation() << endl << endl;
 	console() << mEffect.getFragmentOperation() << endl << endl;

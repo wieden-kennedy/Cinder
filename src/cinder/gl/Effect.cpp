@@ -39,7 +39,8 @@ mStorage( storage ), mType( type ), mValue( value )
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 Operation::Kernel::Kernel()
-: mExpressionBody( "" ), mExpressionOutput( "" ), mOperatorType( OperatorType_Add )
+: mExpressionBody( "" ), mExpressionOutput( "" ), mNameOutput( "" ), 
+mOperatorType( OperatorType_Add )
 {
 }
 
@@ -61,6 +62,11 @@ Operation::Kernel& Operation::Kernel::outputExpression( const string& exp )
 	return *this;
 }
 
+Operation::Kernel& Operation::Kernel::outputName( const string& name )
+{
+	setOutputName( name );
+	return *this;
+}
 
 const string& Operation::Kernel::getBodyExpression() const
 {
@@ -77,6 +83,11 @@ const string& Operation::Kernel::getOutputExpression() const
 	return mExpressionOutput;
 }
 
+const string& Operation::Kernel::getOutputName() const
+{
+	return mNameOutput;
+}
+
 void Operation::Kernel::setBodyExpression( const string& exp )
 {
 	mExpressionBody = exp;
@@ -90,6 +101,11 @@ void Operation::Kernel::setOperatorType( Operation::OperatorType type )
 void Operation::Kernel::setOutputExpression( const string& exp )
 {
 	mExpressionOutput = exp;
+}
+
+void Operation::Kernel::setOutputName( const string& name )
+{
+	mNameOutput = name;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,20 +179,19 @@ string Operation::kernelToString( const Operation& op )
 	string output = "";
 	size_t i = 0;
 	for ( vector<Kernel>::const_iterator iter = op.getKernels().begin(); iter != op.getKernels().end(); ++iter, ++i ) {
-		string index	= cinder::toString( i );
-		output			+= "\t";
+		string name;
+		name += CI_GLSL_OUTPUT_NAME;
+		name += iter->getOutputName() + cinder::toString( i );
+
+		output += "\t";
 #if defined( CINDER_GL_ES_2 )
-		output			+= "highp ";
+		output	+= "highp ";
 #endif
-		output			+= "vec4 ";
-		output			+= CI_GLSL_OUTPUT_NAME;
-		output			+= index + ";\r\n";
-		output			+= "\t{\r\n";
-		output			+= "\t\t" + iter->getBodyExpression() + "\r\n";
-		output			+= "\t\t";
-		output			+= CI_GLSL_OUTPUT_NAME;
-		output			+= index + " = " + iter->getOutputExpression() + ";\r\n";
-		output			+= "\t}\r\n";
+		output += "vec4 " + name + ";\r\n";
+		output += "\t{\r\n";
+		output += "\t\t" + iter->getBodyExpression() + "\r\n";
+		output += "\t\t" + name + " = " + iter->getOutputExpression() + ";\r\n";
+		output += "\t}\r\n";
 	}
 	return output;
 }
@@ -208,7 +223,7 @@ string Operation::outputToString( const Operation& op )
 			}
 			output += " ";
 		}
-		output += CI_GLSL_OUTPUT_NAME + cinder::toString( i );
+		output += CI_GLSL_OUTPUT_NAME + iter->getOutputName() + cinder::toString( i );
 	}
 	return output;
 }
@@ -489,39 +504,6 @@ Operation::Exception::Exception( const string& msg ) throw()
 	sprintf( mMessage, "%s", msg.c_str() );
 }
 
-FragmentOperation::ExcQualifierMergeCountMismatch::ExcQualifierMergeCountMismatch( const string& msg ) throw()
-: Operation::Exception( msg )
-{
-}
-	
-#if defined( CINDER_GL_ES_2 )
-FragmentOperation::ExcQualifierMergePrecisionMismatch::ExcQualifierMergePrecisionMismatch( const string& msg ) throw()
-: Operation::Exception( msg )
-{
-}
-#endif
-	
-FragmentOperation::ExcQualifierMergeStorageMismatch::ExcQualifierMergeStorageMismatch( const string& msg ) throw()
-: Operation::Exception( msg )
-{
-}
-
-FragmentOperation::ExcQualifierMergeTypeMismatch::ExcQualifierMergeTypeMismatch( const string& msg ) throw()
-: Operation::Exception( msg )
-{
-}
-
-FragmentOperation::ExcQualifierMergeValueMismatch::ExcQualifierMergeValueMismatch( const string& msg ) throw()
-: Operation::Exception( msg )
-{
-}
-
-ostream& operator<<( ostream& out, const Operation& op )
-{
-	out << op.toString();
-	return out;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 	
 FragmentOperation::FragmentOperation()
@@ -648,6 +630,41 @@ Operation::QualifierMap FragmentOperation::mergeQualifiers( const Operation::Qua
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+FragmentOperation::ExcQualifierMergeCountMismatch::ExcQualifierMergeCountMismatch( const string& msg ) throw()
+: Operation::Exception( msg )
+{
+}
+	
+#if defined( CINDER_GL_ES_2 )
+FragmentOperation::ExcQualifierMergePrecisionMismatch::ExcQualifierMergePrecisionMismatch( const string& msg ) throw()
+: Operation::Exception( msg )
+{
+}
+#endif
+	
+FragmentOperation::ExcQualifierMergeStorageMismatch::ExcQualifierMergeStorageMismatch( const string& msg ) throw()
+: Operation::Exception( msg )
+{
+}
+
+FragmentOperation::ExcQualifierMergeTypeMismatch::ExcQualifierMergeTypeMismatch( const string& msg ) throw()
+: Operation::Exception( msg )
+{
+}
+
+FragmentOperation::ExcQualifierMergeValueMismatch::ExcQualifierMergeValueMismatch( const string& msg ) throw()
+: Operation::Exception( msg )
+{
+}
+
+ostream& operator<<( ostream& out, const Operation& op )
+{
+	out << op.toString();
+	return out;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 VertexOperation::VertexOperation()
 : Operation()
 {
@@ -768,10 +785,12 @@ FragmentColor::FragmentColor()
 : FragmentOperation()
 {
 	string attr = getSemanticToDefaultFragmentInputNameMap()[ geom::COLOR ];
-	mQualifiers[ attr ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );;
+	mQualifiers[ attr ] = Qualifier( QualifierStorage_Input, QualifierType_Vec4 );
 
-	mKernels.front().outputExpression( attr );
+	mKernels.front().outputExpression( attr ).outputName( "Color" );
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 FragmentTexture2d::FragmentTexture2d()
 : FragmentOperation()
@@ -791,7 +810,7 @@ FragmentTexture2d& FragmentTexture2d::texture( const string& uniformName )
 
 	string attr = getSemanticToDefaultFragmentInputNameMap()[ geom::TEX_COORD_0 ];
 	mKernels.front().bodyExpression( "vec4 color = texture( " + mNameTexture + ", " + attr + ".st );" )
-		.outputExpression( "color" );
+		.outputExpression( "color" ).outputName( "Texture2d" );
 	return *this;
 }
 
@@ -851,27 +870,22 @@ FragmentExposure& FragmentExposure::offset( float v )
 
 string FragmentExposure::toString() const
 {
-	QualifierMap q		= mergeQualifiers( mQualifiers, mInput->getQualifiers() );
-	string inputKernel	= Operation::kernelToString( *mInput );
-	string inputOutput	= Operation::outputToString( *mInput );
-	string exposureName	= CI_GLSL_OUTPUT_NAME;
-	exposureName		+= "Exposure";
+	string output;
+	output = "pow( ";
+	output += Operation::outputToString( *mInput );
+	output += ", vec4( " + mNameExposure + " + " + mNameOffset + " ) )";
 
-	string kernelBody;
-	kernelBody = inputKernel + "\r\n";
-	kernelBody += "\t";
-#if defined( CINDER_GL_ES_2 )
-	kernelBody += "highp ";
-#endif
-	kernelBody += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
-	kernelBody += "\t" + exposureName + " = pow( " + exposureName +  ", vec4( " + mNameExposure + " + " + mNameOffset + " ) );\r\n";
+	Kernel k = Kernel()
+		.bodyExpression( Operation::kernelToString( *mInput ) )
+		.outputExpression( output )
+		.outputName( "Exposure" );
 
-	// TODO manage temp var names
-	vector<Kernel> k;
-	k.push_back( Kernel().bodyExpression( kernelBody ).outputExpression( exposureName ) );
+	vector<Kernel> kernels;
+	kernels.push_back( k );
 
-	FragmentOperation op( q, k );
-
+	QualifierMap qualifiers = mergeQualifiers( mQualifiers, mInput->getQualifiers() );
+	
+	FragmentOperation op( qualifiers, kernels );
 	return op.toString();
 }
 

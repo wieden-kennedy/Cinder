@@ -99,7 +99,6 @@ protected:
 		OperatorType_Subtract,
 	} typedef OperatorType;
 	
-	// TODO completely overhaul
 	class Kernel
 	{
 	public:
@@ -108,18 +107,25 @@ protected:
 		Kernel&				bodyExpression( const std::string& exp );
 		Kernel&				operatorType( OperatorType type );
 		Kernel&				outputExpression( const std::string& exp );
+		Kernel&				outputName( const std::string& exp );
 
 		const std::string&	getBodyExpression() const;
 		OperatorType		getOperatorType() const;
 		const std::string&	getOutputExpression() const;
+		const std::string&	getOutputName() const;
 
 		void				setBodyExpression( const std::string& exp );
 		void				setOperatorType( OperatorType type );
 		void				setOutputExpression( const std::string& exp );
+		void				setOutputName( const std::string& name );
 	protected:
 		std::string			mExpressionBody;
 		std::string			mExpressionOutput;
+		std::string			mNameOutput;
 		OperatorType		mOperatorType;
+
+		friend class		FragmentOperation;
+		friend class		VertexOperation;
 	};
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
