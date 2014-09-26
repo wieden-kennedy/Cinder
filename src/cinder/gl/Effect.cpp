@@ -797,8 +797,8 @@ FragmentTexture2d& FragmentTexture2d::texture( const string& uniformName )
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-FragmentExposure::FragmentExposure( FragmentOperation* op )
-: FragmentOperation(), mInput( op )
+FragmentExposure::FragmentExposure( FragmentOperation* input )
+: FragmentOperation(), mInput( input )
 {
 	exposure( 1.0f ).offset( 0.0f );
 }
@@ -873,6 +873,53 @@ string FragmentExposure::toString() const
 	FragmentOperation op( q, k );
 
 	return op.toString();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+FragmentGrayscale::FragmentGrayscale( FragmentOperation* input )
+: FragmentOperation()
+{
+	color( input );
+}
+
+FragmentGrayscale::FragmentGrayscale( const string& uniformName )
+: FragmentOperation()
+{
+	color( uniformName );
+}
+
+FragmentGrayscale::FragmentGrayscale( geom::Attrib attrib )
+: FragmentOperation()
+{
+	color( attrib );
+}
+
+FragmentGrayscale& FragmentGrayscale::color( FragmentOperation* input )
+{
+	mInput = input;
+	// TODO update qualifier and name
+	return *this;
+}
+
+FragmentGrayscale& FragmentGrayscale::color( const string& uniformName )
+{
+	mInput = nullptr;
+	// TODO update qualifier and name
+	return *this;
+}
+
+FragmentGrayscale& FragmentGrayscale::color( geom::Attrib attrib )
+{
+	mInput = nullptr;
+	// TODO update qualifier and name
+	return *this;
+}
+
+string FragmentGrayscale::toString() const
+{
+	string output = "";
+	return output;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -288,7 +288,7 @@ protected:
 class FragmentExposure : public FragmentOperation
 {
 public:
-	FragmentExposure( FragmentOperation* op = nullptr );
+	FragmentExposure( FragmentOperation* input = nullptr );
 
 	FragmentExposure&	exposure( const std::string& uniformName );
 	FragmentExposure&	exposure( float v );
@@ -301,6 +301,23 @@ protected:
 	FragmentOperation*	mInput;
 	std::string			mNameExposure;
 	std::string			mNameOffset;
+};
+
+class FragmentGrayscale : public FragmentOperation
+{
+public:
+	FragmentGrayscale( FragmentOperation* input = nullptr );
+	FragmentGrayscale( const std::string& uniformName );
+	FragmentGrayscale( geom::Attrib attrib );
+
+	FragmentGrayscale&	color( FragmentOperation* input );
+	FragmentGrayscale&	color( const std::string& uniformName );
+	FragmentGrayscale&	color( geom::Attrib attrib );
+
+	std::string			toString() const;
+protected:
+	FragmentOperation*	mInput;
+	std::string			mNameColor;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
