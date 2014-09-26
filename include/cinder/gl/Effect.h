@@ -99,26 +99,27 @@ protected:
 		OperatorType_Subtract,
 	} typedef OperatorType;
 	
+	// TODO completely overhaul
 	class Kernel
 	{
 	public:
 		Kernel();
 
-		Kernel&					bodyExpression( const std::string& exp );
-		Kernel&					operatorType( OperatorType type );
-		Kernel&					outputExpression( const std::string& exp );
+		Kernel&				bodyExpression( const std::string& exp );
+		Kernel&				operatorType( OperatorType type );
+		Kernel&				outputExpression( const std::string& exp );
 
-		const std::string&		getBodyExpression() const;
-		OperatorType			getOperatorType() const;
-		const std::string&		getOutputExpression() const;
+		const std::string&	getBodyExpression() const;
+		OperatorType		getOperatorType() const;
+		const std::string&	getOutputExpression() const;
 
-		void					setBodyExpression( const std::string& exp );
-		void					setOperatorType( OperatorType type );
-		void					setOutputExpression( const std::string& exp );
+		void				setBodyExpression( const std::string& exp );
+		void				setOperatorType( OperatorType type );
+		void				setOutputExpression( const std::string& exp );
 	protected:
-		std::string				mExpressionBody;
-		std::string				mExpressionOutput;
-		OperatorType			mOperatorType;
+		std::string			mExpressionBody;
+		std::string			mExpressionOutput;
+		OperatorType		mOperatorType;
 	};
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,20 +129,17 @@ protected:
 	static std::map<int32_t, std::string>		getSemanticToDefaultUniformNameMap();
 	static std::map<geom::Attrib, std::string>	getSemanticToDefaultVertexInputNameMap();
 
-	static std::string			kernelToString( const Operation& op );
-	static std::string			outputToString( const Operation& op );
-	static std::string			qualifiersToString( const QualifierMap& qualifers, bool isFragment );
-	static std::string			versionToString( const Operation& op );
+	static std::string	kernelToString( const Operation& op );
+	static std::string	outputToString( const Operation& op );
+	static std::string	qualifiersToString( const QualifierMap& qualifers, bool isFragment );
+	static std::string	versionToString( const Operation& op );
 
-	void						setQualifier( std::string& oldName, const std::string& newName, 
-											  const Qualifier& q );
+	std::vector<Kernel>	mKernels;
+	QualifierMap		mQualifiers;
 
-	std::vector<Kernel>			mKernels;
-	QualifierMap				mQualifiers;
-
-	friend class				Effect;
-	friend class				FragmentOperation;
-	friend class				VertexOperation;
+	friend class		Effect;
+	friend class		FragmentOperation;
+	friend class		VertexOperation;
 public:
 	Operation();
 	Operation( const QualifierMap& qualifers, const std::vector<Kernel>& kernels );
@@ -157,7 +155,7 @@ public:
 	{
 	public:
 		Exception( const std::string& msg ) throw();
-		virtual const char*		what() const throw()
+		virtual const char* what() const throw()
 		{
 			return mMessage;
 		}

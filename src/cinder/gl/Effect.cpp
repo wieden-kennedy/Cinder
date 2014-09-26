@@ -463,16 +463,6 @@ string Operation::versionToString( const Operation& op )
 	return output;
 }
 
-void Operation::setQualifier( string& oldName, const string& newName, 
-							  const Operation::Qualifier& q )
-{
-	if ( mQualifiers.find( oldName ) != mQualifiers.end() ) {
-		mQualifiers.erase( oldName );
-	}
-	oldName = newName;
-	mQualifiers[ oldName ] = q;
-}
-
 const vector<Operation::Kernel>& Operation::getKernels() const
 {
 	return mKernels;
@@ -793,7 +783,11 @@ FragmentTexture2d::FragmentTexture2d()
 
 FragmentTexture2d& FragmentTexture2d::texture( const string& uniformName )
 {
-	setQualifier( mNameTexture, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Sampler2d ) );
+	if ( mQualifiers.find( mNameTexture ) != mQualifiers.end() ) {
+		mQualifiers.erase( mNameTexture );
+	}
+	mNameTexture = uniformName;
+	mQualifiers[ mNameTexture ] = Qualifier( QualifierStorage_Uniform, QualifierType_Sampler2d );
 
 	string attr = getSemanticToDefaultFragmentInputNameMap()[ geom::TEX_COORD_0 ];
 	mKernels.front().bodyExpression( "vec4 color = texture( " + mNameTexture + ", " + attr + ".st );" )
@@ -811,13 +805,21 @@ FragmentExposure::FragmentExposure( FragmentOperation* op )
 
 FragmentExposure& FragmentExposure::exposure( const string& uniformName )
 {
-	setQualifier( mNameExposure, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Float ) );
+	if ( mQualifiers.find( mNameExposure ) != mQualifiers.end() ) {
+		mQualifiers.erase( mNameExposure );
+	}
+	mNameExposure = uniformName;
+	mQualifiers[ mNameExposure ] = Qualifier( QualifierStorage_Uniform, QualifierType_Float );
 	return *this;
 }
 
 FragmentExposure& FragmentExposure::exposure( float v )
 {
-	setQualifier( mNameExposure, "kExposure", Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
+	if ( mQualifiers.find( mNameExposure ) != mQualifiers.end() ) {
+		mQualifiers.erase( mNameExposure );
+	}
+	mNameExposure = "kExposure";
+	mQualifiers[ mNameExposure ] = Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) );
 	return *this;
 }
 
@@ -829,13 +831,21 @@ FragmentExposure& FragmentExposure::input( FragmentOperation* op )
 
 FragmentExposure& FragmentExposure::offset( const string& uniformName )
 {
-	setQualifier( mNameOffset, uniformName, Qualifier( QualifierStorage_Uniform, QualifierType_Float ) );
+	if ( mQualifiers.find( mNameOffset ) != mQualifiers.end() ) {
+		mQualifiers.erase( mNameOffset );
+	}
+	mNameOffset = uniformName;
+	mQualifiers[ mNameOffset ] = Qualifier( QualifierStorage_Uniform, QualifierType_Float );
 	return *this;
 }
 
 FragmentExposure& FragmentExposure::offset( float v )
 {
-	setQualifier( mNameOffset, "kOffset", Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) ) );
+	if ( mQualifiers.find( mNameOffset ) != mQualifiers.end() ) {
+		mQualifiers.erase( mNameOffset );
+	}
+	mNameOffset = "kOffset";
+	mQualifiers[ mNameOffset ] = Qualifier( QualifierStorage_Const, QualifierType_Float, cinder::toString( v ) );
 	return *this;
 }
 
@@ -856,35 +866,13 @@ string FragmentExposure::toString() const
 	kernelBody += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
 	kernelBody += "\t" + exposureName + " = pow( " + exposureName +  ", vec4( " + mNameExposure + " + " + mNameOffset + " ) );\r\n";
 
+	// TODO manage temp var names
 	vector<Kernel> k;
 	k.push_back( Kernel().bodyExpression( kernelBody ).outputExpression( exposureName ) );
 
 	FragmentOperation op( q, k );
 
 	return op.toString();
-
-	// TODO this is clumsy -- should leverage base class / kernel more
-//	string output;
-//	output = Operation::versionToString( *this ) + "\r\n";
-//	output += Operation::qualifiersToString( q, true ) + "\r\n";
-//#if !defined( CINDER_GL_ES_2 )
-//	output += "out vec4 ";
-//	output += CI_GLSL_OUTPUT_NAME_FRAG;
-//	output += ";\r\n\r\n";
-//#endif
-//	output += CI_GLSL_MAIN_OPEN;
-//	output += inputKernel + "\r\n";
-//	output += "\t";
-//#if defined( CINDER_GL_ES_2 )
-//	output += "highp ";
-//#endif
-//	output += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
-//	output += "\t" + exposureName + " = pow( " + exposureName +  ", vec4( " + mNameExposure + " + " + mNameOffset + " ) );\r\n";
-//	output += "\t";
-//	output += CI_GLSL_OUTPUT_NAME_FRAG;
-//	output += " = " + exposureName + ";\r\n";
-//	output += CI_GLSL_MAIN_CLOSE;
-//	return output;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
