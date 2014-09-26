@@ -128,14 +128,10 @@ protected:
 	static std::map<int32_t, std::string>		getSemanticToDefaultUniformNameMap();
 	static std::map<geom::Attrib, std::string>	getSemanticToDefaultVertexInputNameMap();
 
-	static QualifierMap			mergeQualifiers( const QualifierMap& a, const QualifierMap& b );
-
 	static std::string			kernelToString( const Operation& op );
 	static std::string			outputToString( const Operation& op );
 	static std::string			qualifiersToString( const QualifierMap& qualifers, bool isFragment );
 	static std::string			versionToString( const Operation& op );
-
-	void						merge( const Operation& rhs, OperatorType type );
 
 	void						setQualifier( std::string& oldName, const std::string& newName, 
 											  const Qualifier& q );
@@ -149,18 +145,6 @@ protected:
 public:
 	Operation();
 	Operation( const QualifierMap& qualifers, const std::vector<Kernel>& kernels );
-
-	virtual Operation					operator+( const Operation& rhs );
-	virtual Operation 					operator*( const Operation& rhs );
-	virtual Operation 					operator-( const Operation& rhs );
-	virtual Operation 					operator/( const Operation& rhs );
-	
-	virtual void						operator+=( const Operation& rhs );
-	virtual void						operator*=( const Operation& rhs );
-	virtual void						operator-=( const Operation& rhs );
-	virtual void						operator/=( const Operation& rhs );
-
-	// TODO dot, cross, etc
 
 	virtual const std::vector<Kernel>&	getKernels() const;
 	virtual const QualifierMap&			getQualifiers() const;
@@ -177,40 +161,8 @@ public:
 		{
 			return mMessage;
 		}
-	private:
+	protected:
 		char mMessage[ 2048 ];
-	};
-
-	class ExcQualifierMergeCountMismatch : public Exception
-	{
-	public:
-		ExcQualifierMergeCountMismatch( const std::string& msg ) throw();
-	};
-	
-#if defined( CINDER_GL_ES_2 )
-	class ExcQualifierMergePrecisionMismatch : public Exception
-	{
-	public:
-		ExcQualifierMergePrecisionMismatch( const std::string& msg ) throw();
-	};
-#endif
-	
-	class ExcQualifierMergeStorageMismatch : public Exception
-	{
-	public:
-		ExcQualifierMergeStorageMismatch( const std::string& msg ) throw();
-	};
-	
-	class ExcQualifierMergeTypeMismatch : public Exception
-	{
-	public:
-		ExcQualifierMergeTypeMismatch( const std::string& msg ) throw();
-	};
-	
-	class ExcQualifierMergeValueMismatch : public Exception
-	{
-	public:
-		ExcQualifierMergeValueMismatch( const std::string& msg ) throw();
 	};
 };
 
@@ -235,6 +187,44 @@ public:
 	virtual void				operator/=( const FragmentOperation& rhs );
 
 	virtual std::string			toString() const;
+protected:
+	void						merge( const Operation& rhs, OperatorType type );
+	static QualifierMap			mergeQualifiers( const QualifierMap& a, const QualifierMap& b );
+public:
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	class ExcQualifierMergeCountMismatch : public Operation::Exception
+	{
+	public:
+		ExcQualifierMergeCountMismatch( const std::string& msg ) throw();
+	};
+	
+#if defined( CINDER_GL_ES_2 )
+	class ExcQualifierMergePrecisionMismatch : public Operation::Exception
+	{
+	public:
+		ExcQualifierMergePrecisionMismatch( const std::string& msg ) throw();
+	};
+#endif
+	
+	class ExcQualifierMergeStorageMismatch : public Operation::Exception
+	{
+	public:
+		ExcQualifierMergeStorageMismatch( const std::string& msg ) throw();
+	};
+	
+	class ExcQualifierMergeTypeMismatch : public Operation::Exception
+	{
+	public:
+		ExcQualifierMergeTypeMismatch( const std::string& msg ) throw();
+	};
+	
+	class ExcQualifierMergeValueMismatch : public Operation::Exception
+	{
+	public:
+		ExcQualifierMergeValueMismatch( const std::string& msg ) throw();
+	};
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,20 +235,11 @@ public:
 	VertexOperation();
 	VertexOperation( const QualifierMap& qualifers, const std::vector<Kernel>& kernels );
 
-	virtual VertexOperation		operator+( const VertexOperation& rhs );
-	virtual VertexOperation 	operator*( const VertexOperation& rhs );
-	virtual VertexOperation 	operator-( const VertexOperation& rhs );
-	virtual VertexOperation 	operator/( const VertexOperation& rhs );
-	
-	virtual void				operator+=( const VertexOperation& rhs );
-	virtual void				operator*=( const VertexOperation& rhs );
-	virtual void				operator-=( const VertexOperation& rhs );
-	virtual void				operator/=( const VertexOperation& rhs );
-
-	virtual std::string			toString() const;
+	virtual std::string	toString() const;
 protected:
-	static std::string			vertexOutputAssignmentToString( const QualifierMap& qualifers );
-	friend class				Effect;
+	static std::string	vertexOutputAssignmentToString( const QualifierMap& qualifers );
+
+	friend class		Effect;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

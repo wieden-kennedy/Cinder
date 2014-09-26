@@ -158,34 +158,6 @@ map<geom::Attrib, string> Operation::getSemanticToDefaultVertexInputNameMap()
 	return m;
 }
 
-Operation::QualifierMap Operation::mergeQualifiers( const Operation::QualifierMap& a, const Operation::QualifierMap& b )
-{
-	QualifierMap merged = a;
-	for ( map<string, Operation::Qualifier>::const_iterator iter = b.begin(); iter != b.end(); ++iter ) {
-		const string& name = iter->first;
-		if ( merged.find( name ) != merged.end() ) {
-			const Qualifier& qa = merged.find( name )->second;
-			const Qualifier& qb = iter->second;
-			if ( qa.mCount != qb.mCount ) {
-				throw Operation::ExcQualifierMergeCountMismatch( "Unable to merge qualifiers. Count mismatch for \"" + name + "\"." );
-#if defined( CINDER_GL_ES_2 )
-			} else if ( qa.mPrecision != qb.mPrecision ) {
-				throw Operation::ExcQualifierMergePrecisionMismatch( "Unable to merge qualifiers. Precision mismatch for \"" + name + "\"." );
-#endif
-			} else if ( qa.mStorage != qb.mStorage ) {
-				throw Operation::ExcQualifierMergeStorageMismatch( "Unable to merge qualifiers. Storage mismatch for \"" + name + "\"." );
-			} else if ( qa.mType != qb.mType ) {
-				throw Operation::ExcQualifierMergeTypeMismatch( "Unable to merge qualifiers. Type mismatch for \"" + name + "\"." );
-			} else if ( qa.mValue != qb.mValue ) {
-				throw Operation::ExcQualifierMergeValueMismatch( "Unable to merge qualifiers. Value mismatch for \"" + name + "\"." );
-			}
-		} else {
-			merged[ name ] = iter->second;
-		}
-	}
-	return merged;
-}
-
 string Operation::kernelToString( const Operation& op )
 {
 	string output = "";
@@ -491,19 +463,6 @@ string Operation::versionToString( const Operation& op )
 	return output;
 }
 
-void Operation::merge( const Operation& rhs, OperatorType type )
-{
-	if ( !rhs.mKernels.empty() ) {
-		mQualifiers = mergeQualifiers( mQualifiers, rhs.mQualifiers );
-		for ( vector<Operation::Kernel>::const_iterator iter = rhs.mKernels.begin(); iter != rhs.mKernels.end(); ++iter ) {
-			mKernels.push_back( *iter );
-			if ( iter == rhs.mKernels.begin() ) {
-				mKernels.back().setOperatorType( type );
-			}
-		}
-	}
-}
-
 void Operation::setQualifier( string& oldName, const string& newName, 
 							  const Operation::Qualifier& q )
 {
@@ -512,54 +471,6 @@ void Operation::setQualifier( string& oldName, const string& newName,
 	}
 	oldName = newName;
 	mQualifiers[ oldName ] = q;
-}
-	
-Operation Operation::operator+( const Operation& rhs )
-{
-	Operation lhs = *this;
-	lhs += rhs;
-	return lhs;
-}
-	
-Operation Operation::operator*( const Operation& rhs )
-{
-	Operation lhs = *this;
-	lhs *= rhs;
-	return lhs;
-}
-	
-Operation Operation::operator-( const Operation& rhs )
-{
-	Operation lhs = *this;
-	lhs -= rhs;
-	return lhs;
-}
-	
-Operation Operation::operator/( const Operation& rhs )
-{
-	Operation lhs = *this;
-	lhs /= rhs;
-	return lhs;
-}
-
-void Operation::operator+=( const Operation& rhs )
-{
-	merge( rhs, OperatorType_Add );
-}
-	
-void Operation::operator*=( const Operation& rhs )
-{
-	merge( rhs, OperatorType_Multiply );
-}
-	
-void Operation::operator-=( const Operation& rhs )
-{
-	merge( rhs, OperatorType_Subtract );
-}
-	
-void Operation::operator/=( const Operation& rhs )
-{
-	merge( rhs, OperatorType_Divide );
 }
 
 const vector<Operation::Kernel>& Operation::getKernels() const
@@ -588,29 +499,29 @@ Operation::Exception::Exception( const string& msg ) throw()
 	sprintf( mMessage, "%s", msg.c_str() );
 }
 
-Operation::ExcQualifierMergeCountMismatch::ExcQualifierMergeCountMismatch( const string& msg ) throw()
+FragmentOperation::ExcQualifierMergeCountMismatch::ExcQualifierMergeCountMismatch( const string& msg ) throw()
 : Operation::Exception( msg )
 {
 }
 	
 #if defined( CINDER_GL_ES_2 )
-Operation::ExcQualifierMergePrecisionMismatch::ExcQualifierMergePrecisionMismatch( const string& msg ) throw()
+FragmentOperation::ExcQualifierMergePrecisionMismatch::ExcQualifierMergePrecisionMismatch( const string& msg ) throw()
 : Operation::Exception( msg )
 {
 }
 #endif
 	
-Operation::ExcQualifierMergeStorageMismatch::ExcQualifierMergeStorageMismatch( const string& msg ) throw()
+FragmentOperation::ExcQualifierMergeStorageMismatch::ExcQualifierMergeStorageMismatch( const string& msg ) throw()
 : Operation::Exception( msg )
 {
 }
 
-Operation::ExcQualifierMergeTypeMismatch::ExcQualifierMergeTypeMismatch( const string& msg ) throw()
+FragmentOperation::ExcQualifierMergeTypeMismatch::ExcQualifierMergeTypeMismatch( const string& msg ) throw()
 : Operation::Exception( msg )
 {
 }
 
-Operation::ExcQualifierMergeValueMismatch::ExcQualifierMergeValueMismatch( const string& msg ) throw()
+FragmentOperation::ExcQualifierMergeValueMismatch::ExcQualifierMergeValueMismatch( const string& msg ) throw()
 : Operation::Exception( msg )
 {
 }
@@ -629,7 +540,7 @@ FragmentOperation::FragmentOperation()
 }
 
 FragmentOperation::FragmentOperation( const Operation::QualifierMap& qualifers, 
-					  const vector<Operation::Kernel>& kernels )
+									  const vector<Operation::Kernel>& kernels )
 : Operation( qualifers, kernels )
 {
 }
@@ -661,25 +572,25 @@ FragmentOperation FragmentOperation::operator/( const FragmentOperation& rhs )
 	lhs /= rhs;
 	return lhs;
 }
-	
+
 void FragmentOperation::operator+=( const FragmentOperation& rhs )
 {
-	return Operation::operator+=( rhs );
+	merge( rhs, OperatorType_Add );
 }
-
+	
 void FragmentOperation::operator*=( const FragmentOperation& rhs )
 {
-	return Operation::operator*=( rhs );
+	merge( rhs, OperatorType_Multiply );
 }
-
+	
 void FragmentOperation::operator-=( const FragmentOperation& rhs )
 {
-	return Operation::operator*=( rhs );
+	merge( rhs, OperatorType_Subtract );
 }
-
+	
 void FragmentOperation::operator/=( const FragmentOperation& rhs )
 {
-	return Operation::operator/=( rhs );
+	merge( rhs, OperatorType_Divide );
 }
 
 string FragmentOperation::toString() const
@@ -704,6 +615,47 @@ string FragmentOperation::toString() const
 	return output;
 }
 
+void FragmentOperation::merge( const Operation& rhs, OperatorType type )
+{
+	if ( !rhs.mKernels.empty() ) {
+		mQualifiers = mergeQualifiers( mQualifiers, rhs.mQualifiers );
+		for ( vector<Operation::Kernel>::const_iterator iter = rhs.mKernels.begin(); iter != rhs.mKernels.end(); ++iter ) {
+			mKernels.push_back( *iter );
+			if ( iter == rhs.mKernels.begin() ) {
+				mKernels.back().setOperatorType( type );
+			}
+		}
+	}
+}
+
+Operation::QualifierMap FragmentOperation::mergeQualifiers( const Operation::QualifierMap& a, const Operation::QualifierMap& b )
+{
+	QualifierMap merged = a;
+	for ( map<string, Operation::Qualifier>::const_iterator iter = b.begin(); iter != b.end(); ++iter ) {
+		const string& name = iter->first;
+		if ( merged.find( name ) != merged.end() ) {
+			const Qualifier& qa = merged.find( name )->second;
+			const Qualifier& qb = iter->second;
+			if ( qa.mCount != qb.mCount ) {
+				throw FragmentOperation::ExcQualifierMergeCountMismatch( "Unable to merge qualifiers. Count mismatch for \"" + name + "\"." );
+#if defined( CINDER_GL_ES_2 )
+			} else if ( qa.mPrecision != qb.mPrecision ) {
+				throw Operation::ExcQualifierMergePrecisionMismatch( "Unable to merge qualifiers. Precision mismatch for \"" + name + "\"." );
+#endif
+			} else if ( qa.mStorage != qb.mStorage ) {
+				throw FragmentOperation::ExcQualifierMergeStorageMismatch( "Unable to merge qualifiers. Storage mismatch for \"" + name + "\"." );
+			} else if ( qa.mType != qb.mType ) {
+				throw FragmentOperation::ExcQualifierMergeTypeMismatch( "Unable to merge qualifiers. Type mismatch for \"" + name + "\"." );
+			} else if ( qa.mValue != qb.mValue ) {
+				throw FragmentOperation::ExcQualifierMergeValueMismatch( "Unable to merge qualifiers. Value mismatch for \"" + name + "\"." );
+			}
+		} else {
+			merged[ name ] = iter->second;
+		}
+	}
+	return merged;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 VertexOperation::VertexOperation()
@@ -715,54 +667,6 @@ VertexOperation::VertexOperation( const Operation::QualifierMap& qualifers,
 					  const vector<Operation::Kernel>& kernels )
 : Operation( qualifers, kernels )
 {
-}
-
-VertexOperation VertexOperation::operator+( const VertexOperation& rhs )
-{
-	VertexOperation lhs = *this;
-	lhs += rhs;
-	return lhs;
-}
-	
-VertexOperation VertexOperation::operator*( const VertexOperation& rhs )
-{
-	VertexOperation lhs = *this;
-	lhs *= rhs;
-	return lhs;
-}
-	
-VertexOperation VertexOperation::operator-( const VertexOperation& rhs )
-{
-	VertexOperation lhs = *this;
-	lhs -= rhs;
-	return lhs;
-}
-	
-VertexOperation VertexOperation::operator/( const VertexOperation& rhs )
-{
-	VertexOperation lhs = *this;
-	lhs /= rhs;
-	return lhs;
-}
-	
-void VertexOperation::operator+=( const VertexOperation& rhs )
-{
-	return Operation::operator+=( rhs );
-}
-
-void VertexOperation::operator*=( const VertexOperation& rhs )
-{
-	return Operation::operator*=( rhs );
-}
-
-void VertexOperation::operator-=( const VertexOperation& rhs )
-{
-	return Operation::operator*=( rhs );
-}
-
-void VertexOperation::operator/=( const VertexOperation& rhs )
-{
-	return Operation::operator/=( rhs );
 }
 
 string VertexOperation::vertexOutputAssignmentToString( const QualifierMap& q )
