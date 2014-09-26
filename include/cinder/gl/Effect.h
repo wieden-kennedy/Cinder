@@ -10,6 +10,8 @@
 namespace cinder { namespace gl { namespace effect {
 
 class Effect;
+class FragmentOperation;
+class VertexOperation;
 
 class Operation
 {
@@ -142,9 +144,12 @@ protected:
 	QualifierMap				mQualifiers;
 
 	friend class				Effect;
+	friend class				FragmentOperation;
+	friend class				VertexOperation;
 public:
 	Operation();
-	
+	Operation( const QualifierMap& qualifers, const std::vector<Kernel>& kernels );
+
 	virtual Operation					operator+( const Operation& rhs );
 	virtual Operation 					operator*( const Operation& rhs );
 	virtual Operation 					operator-( const Operation& rhs );
@@ -217,6 +222,7 @@ class FragmentOperation : public Operation
 {
 public:
 	FragmentOperation();
+	FragmentOperation( const QualifierMap& qualifers, const std::vector<Kernel>& kernels );
 
 	virtual FragmentOperation	operator+( const FragmentOperation& rhs );
 	virtual FragmentOperation 	operator*( const FragmentOperation& rhs );
@@ -237,6 +243,7 @@ class VertexOperation : public Operation
 {
 public:
 	VertexOperation();
+	VertexOperation( const QualifierMap& qualifers, const std::vector<Kernel>& kernels );
 
 	virtual VertexOperation		operator+( const VertexOperation& rhs );
 	virtual VertexOperation 	operator*( const VertexOperation& rhs );

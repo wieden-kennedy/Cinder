@@ -99,6 +99,12 @@ Operation::Operation()
 	mKernels.push_back( Kernel() );
 }
 
+Operation::Operation( const Operation::QualifierMap& qualifers, 
+					  const vector<Operation::Kernel>& kernels )
+: mKernels( kernels ), mQualifiers( qualifers )
+{
+}
+
 map<string, geom::Attrib> Operation::getDefaultFragmentInputNameToSemanticMap()
 {
 	static map<string, geom::Attrib> m;
@@ -622,6 +628,12 @@ FragmentOperation::FragmentOperation()
 {
 }
 
+FragmentOperation::FragmentOperation( const Operation::QualifierMap& qualifers, 
+					  const vector<Operation::Kernel>& kernels )
+: Operation( qualifers, kernels )
+{
+}
+
 FragmentOperation FragmentOperation::operator+( const FragmentOperation& rhs )
 {
 	FragmentOperation lhs = *this;
@@ -696,6 +708,12 @@ string FragmentOperation::toString() const
 
 VertexOperation::VertexOperation()
 : Operation()
+{
+}
+
+VertexOperation::VertexOperation( const Operation::QualifierMap& qualifers, 
+					  const vector<Operation::Kernel>& kernels )
+: Operation( qualifers, kernels )
 {
 }
 
@@ -822,7 +840,7 @@ void Effect::createVertexOutputs()
 			const string& name = iter->first;
 			Operation::Qualifier out( q );
 			out.mStorage	= Operation::QualifierStorage_Output;
-			v[ name ]		= out;
+			v[ name ]		= out;	
 
 			const map<string, geom::Attrib>& semanticMap = Operation::getDefaultFragmentInputNameToSemanticMap();
 			if ( semanticMap.find( name ) != semanticMap.end() ) {
@@ -925,28 +943,44 @@ string FragmentExposure::toString() const
 	string exposureName	= CI_GLSL_OUTPUT_NAME;
 	exposureName		+= "Exposure";
 
-	// TODO this is clumsy -- should leverage base class / kernel more
-	string output;
-	output = Operation::versionToString( *this ) + "\r\n";
-	output += Operation::qualifiersToString( q, true ) + "\r\n";
-#if !defined( CINDER_GL_ES_2 )
-	output += "out vec4 ";
-	output += CI_GLSL_OUTPUT_NAME_FRAG;
-	output += ";\r\n\r\n";
-#endif
-	output += CI_GLSL_MAIN_OPEN;
-	output += inputKernel + "\r\n";
-	output += "\t";
+	string kernelBody;
+	kernelBody = inputKernel + "\r\n";
+	kernelBody += "\t";
 #if defined( CINDER_GL_ES_2 )
-	output += "highp ";
+	kernelBody += "highp ";
 #endif
-	output += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
-	output += "\t" + exposureName + " = pow( " + exposureName +  ", vec4( " + mNameExposure + " + " + mNameOffset + " ) );\r\n";
-	output += "\t";
-	output += CI_GLSL_OUTPUT_NAME_FRAG;
-	output += " = " + exposureName + ";\r\n";
-	output += CI_GLSL_MAIN_CLOSE;
-	return output;
+	kernelBody += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
+	kernelBody += "\t" + exposureName + " = pow( " + exposureName +  ", vec4( " + mNameExposure + " + " + mNameOffset + " ) );\r\n";
+
+	vector<Kernel> k;
+	k.push_back( Kernel().bodyExpression( kernelBody ).outputExpression( exposureName ) );
+
+	FragmentOperation op( q, k );
+
+	return op.toString();
+
+	// TODO this is clumsy -- should leverage base class / kernel more
+//	string output;
+//	output = Operation::versionToString( *this ) + "\r\n";
+//	output += Operation::qualifiersToString( q, true ) + "\r\n";
+//#if !defined( CINDER_GL_ES_2 )
+//	output += "out vec4 ";
+//	output += CI_GLSL_OUTPUT_NAME_FRAG;
+//	output += ";\r\n\r\n";
+//#endif
+//	output += CI_GLSL_MAIN_OPEN;
+//	output += inputKernel + "\r\n";
+//	output += "\t";
+//#if defined( CINDER_GL_ES_2 )
+//	output += "highp ";
+//#endif
+//	output += "vec4 " + exposureName + " = " + inputOutput + ";\r\n";
+//	output += "\t" + exposureName + " = pow( " + exposureName +  ", vec4( " + mNameExposure + " + " + mNameOffset + " ) );\r\n";
+//	output += "\t";
+//	output += CI_GLSL_OUTPUT_NAME_FRAG;
+//	output += " = " + exposureName + ";\r\n";
+//	output += CI_GLSL_MAIN_CLOSE;
+//	return output;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

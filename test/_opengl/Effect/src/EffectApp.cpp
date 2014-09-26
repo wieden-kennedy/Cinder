@@ -35,7 +35,7 @@ void EffectApp::draw()
 		gl::ScopedGlslProg glsl( mGlslProg );
 		mTexture->bind( 0 );
 
-		gl::color( ColorAf( 1.0f, 1.0f, 1.0f, 1.0f ) );
+		gl::color( ColorAf( 1.0f, 0.8f, 0.6f, 1.0f ) );
 		gl::drawSolidRect( getWindowBounds() );
 
 		mTexture->unbind();
